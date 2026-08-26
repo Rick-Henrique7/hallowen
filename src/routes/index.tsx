@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { AnimatePresence } from "motion/react";
-import { Envelope } from "@/components/invitation/Envelope";
-import { LetterCard } from "@/components/invitation/LetterCard";
-import { SpiderOverlay } from "@/components/invitation/SpiderOverlay";
+import { AnimatePresence, motion } from "motion/react";
 import { Embers } from "@/components/invitation/Embers";
+import { SpiderOverlay } from "@/components/invitation/SpiderOverlay";
+import { WalkingSpider } from "@/components/invitation/WalkingSpider";
 
 const TITLE = "Halloween Party — Você Está Convidado";
 const DESCRIPTION =
@@ -33,20 +32,52 @@ function Index() {
       <Embers />
       <SpiderOverlay />
 
-      {/* Envelope: centered overlay so it can slide down and fade while the letter expands */}
-      <div
-        className={`absolute inset-0 z-30 flex items-center justify-center ${
-          open ? "pointer-events-none" : ""
-        }`}
-        aria-hidden={open}
-      >
-        <Envelope open={open} onOpen={() => setOpen(true)} />
-      </div>
+      <div className="relative z-30 w-full max-w-4xl">
+        <AnimatePresence mode="wait">
+          {!open && (
+            <motion.button
+              key="closed"
+              type="button"
+              onClick={() => setOpen(true)}
+              aria-label="Abrir o convite"
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: -10, transition: { duration: 0.25 } }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="group relative block w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-pumpkin"
+            >
+              <img
+                src="/envelope-fechado.svg"
+                alt="Envelope de Halloween fechado"
+                draggable={false}
+                className="block h-auto w-full select-none drop-shadow-[0_35px_60px_rgba(0,0,0,0.55)] transition-transform duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1"
+              />
+            </motion.button>
+          )}
 
-      <AnimatePresence>
-        {open && <LetterCard key="letter" onClose={() => setOpen(false)} />}
-      </AnimatePresence>
+          {open && (
+            <motion.div
+              key="open"
+              initial={{ opacity: 0, scale: 0.7, y: 60 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.25 } }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              className="relative aspect-[3/2] w-full overflow-hidden rounded-sm shadow-[0_35px_80px_rgba(0,0,0,0.55)]"
+            >
+              <img
+                src="/envelope-aberto.svg"
+                alt="Envelope de Halloween aberto"
+                draggable={false}
+                className="block h-full w-full select-none object-cover"
+              />
+
+              {/* Spiders walking inside the open envelope */}
+              <WalkingSpider top={40} duration={26} delay={1} size={88} />
+              <WalkingSpider top={320} duration={32} delay={7} size={72} reverse />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </main>
   );
 }
-
