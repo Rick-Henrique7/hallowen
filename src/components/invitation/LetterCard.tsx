@@ -1,7 +1,6 @@
 import { motion } from "motion/react";
 import { OrnateFrame } from "./OrnateFrame";
 import { RsvpForm } from "./RsvpForm";
-import { WalkingSpider } from "./WalkingSpider";
 
 const DETAILS = [
   { label: "Data", value: "31 de Outubro, 2026" },
@@ -69,10 +68,6 @@ export function LetterCard({ onClose }: { onClose: () => void }) {
           <RsvpForm />
         </div>
       </div>
-
-      {/* Spiders walking across the card */}
-      <WalkingSpider top={60} duration={26} delay={1} size={84} />
-      <WalkingSpider top={390} duration={32} delay={7} size={72} reverse />
     </motion.article>
   );
 }
