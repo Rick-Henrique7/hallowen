@@ -1,21 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { Embers } from "@/components/invitation/Embers";
 import { SpiderOverlay } from "@/components/invitation/SpiderOverlay";
 import { WalkingSpider } from "@/components/invitation/WalkingSpider";
 
-const TITLE = "Halloween Party — Você Está Convidado";
-const DESCRIPTION =
+const DEFAULT_TITLE = "Halloween Party — Você Está Convidado";
+const DEFAULT_DESCRIPTION =
   "Abra o envelope e descubra os detalhes da nossa festa de Halloween: 31 de outubro, fantasia obrigatória. Confirme sua presença.";
 
+type Search = {
+  name?: string;
+  id?: string;
+};
+
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>): Search => {
+    const result: Search = {};
+    if (typeof search["name"] === "string") result.name = search["name"];
+    if (typeof search["id"] === "string") result.id = search["id"];
+    return result;
+  },
   head: () => ({
     meta: [
-      { title: TITLE },
-      { name: "description", content: DESCRIPTION },
-      { property: "og:title", content: TITLE },
-      { property: "og:description", content: DESCRIPTION },
+      { title: DEFAULT_TITLE },
+      { name: "description", content: DEFAULT_DESCRIPTION },
+      { property: "og:title", content: DEFAULT_TITLE },
+      { property: "og:description", content: DEFAULT_DESCRIPTION },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -25,6 +36,14 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const [open, setOpen] = useState(false);
+  const { name } = Route.useSearch();
+
+  // Personalize the document title when a name is in the URL.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const base = "Halloween Party — Você Está Convidado";
+    document.title = name ? `${name}, ${base}` : base;
+  }, [name]);
 
   return (
     <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-crimson px-4 py-16">
@@ -73,9 +92,26 @@ function Index() {
                 style={{ mixBlendMode: "darken" }}
               />
 
+              {/* Personalized greeting overlay */}
+              {name && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.6 }}
+                  className="pointer-events-none absolute inset-x-0 top-[8%] flex flex-col items-center px-6 text-center"
+                >
+                  <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-parchment/60 sm:text-xs">
+                    Para
+                  </span>
+                  <span className="mt-1 break-words font-display text-2xl text-parchment drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] sm:text-3xl md:text-4xl">
+                    {name}
+                  </span>
+                </motion.div>
+              )}
+
               {/* Spiders walking inside the open envelope */}
-              <WalkingSpider top={40} duration={26} delay={1} size={88} />
-              <WalkingSpider top={320} duration={32} delay={7} size={72} reverse />
+              <WalkingSpider top={56} duration={26} delay={1} size={80} />
+              <WalkingSpider top={340} duration={32} delay={7} size={64} reverse />
             </motion.div>
           )}
         </AnimatePresence>
