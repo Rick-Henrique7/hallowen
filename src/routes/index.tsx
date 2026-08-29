@@ -63,7 +63,7 @@ function Index() {
               aria-label="Abrir o convite"
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, transition: { duration: 0.3 } }}
+              exit={{ opacity: 0, scale: 0.96, y: -10, transition: { duration: 0.25 } }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               className="group relative block w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-crimson"
             >
@@ -81,16 +81,9 @@ function Index() {
             <motion.div
               key="open"
               initial={{ opacity: 0, scale: 0.7, y: 60 }}
-              animate={{
-                opacity: [0, 1, 1, 0],
-                scale: [0.7, 1, 1, 0.95],
-                y: [60, 0, 0, "100vh"],
-              }}
-              transition={{
-                duration: 2.5,
-                times: [0, 0.3, 0.55, 1],
-                ease: [0.22, 1, 0.36, 1],
-              }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.25 } }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
               className="relative w-full"
             >
               <img
