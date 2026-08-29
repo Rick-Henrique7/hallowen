@@ -69,10 +69,10 @@ function Index() {
               className="group relative block w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-crimson"
             >
               <img
-                src="/envelope-fechado.svg"
-                alt="Envelope de Halloween fechado"
+                src="/carta-03.svg"
+                alt="Carta de Halloween fechada"
                 draggable={false}
-                className="block h-auto w-full select-none drop-shadow-[0_35px_60px_rgba(0,0,0,0.55)] transition-transform duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1"
+                className="block h-auto w-full select-none bg-transparent drop-shadow-[0_35px_60px_rgba(0,0,0,0.55)] transition-transform duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1"
                 style={{ mixBlendMode: "multiply" }}
               />
             </motion.button>
@@ -88,10 +88,10 @@ function Index() {
               className="relative isolate aspect-[3/2] w-full overflow-hidden rounded-sm shadow-[0_35px_80px_rgba(0,0,0,0.55)]"
             >
               <img
-                src="/envelope-aberto.svg"
-                alt="Envelope de Halloween aberto"
+                src="/carta-01.svg"
+                alt="Carta de Halloween aberta"
                 draggable={false}
-                className="block h-full w-full select-none object-cover"
+                className="block h-full w-full select-none bg-transparent object-cover"
                 style={{ mixBlendMode: "multiply" }}
               />
 
