@@ -63,14 +63,14 @@ function Index() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: -10, transition: { duration: 0.25 } }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="group relative isolate block w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-crimson"
+              className="group relative block w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-crimson"
             >
               <img
                 src="/envelope-fechado.svg"
                 alt="Envelope de Halloween fechado"
                 draggable={false}
                 className="block h-auto w-full select-none drop-shadow-[0_35px_60px_rgba(0,0,0,0.55)] transition-transform duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1"
-                style={{ mixBlendMode: "darken" }}
+                style={{ mixBlendMode: "multiply" }}
               />
             </motion.button>
           )}
@@ -89,7 +89,7 @@ function Index() {
                 alt="Envelope de Halloween aberto"
                 draggable={false}
                 className="block h-full w-full select-none object-cover"
-                style={{ mixBlendMode: "darken" }}
+                style={{ mixBlendMode: "multiply" }}
               />
 
               {/* Personalized greeting overlay */}
