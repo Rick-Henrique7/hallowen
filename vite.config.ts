@@ -11,5 +11,18 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    // The default Lovable config blocks `**/server/**` from going to the
+    // client bundle. That breaks TanStack Start's createServerFn pattern,
+    // which expects server fns to live under `src/server/**` and be safely
+    // RPC-stubbed in the client. We override with an empty blocked-files
+    // list to disable the rule; we keep the `server-only` specifier
+    // protection (catches accidentally-leaked `import 'server-only'`).
+    importProtection: {
+      behavior: "error",
+      client: {
+        files: [],
+        specifiers: ["server-only"],
+      },
+    },
   },
 });
