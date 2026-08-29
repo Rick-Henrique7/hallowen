@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "@/server/db/client";
-import { invites } from "@/server/db/schema";
+import { db } from "@/api/db/client";
+import { invites } from "@/api/db/schema";
 import { generateInviteId } from "@/lib/id";
 
 const createSchema = z.object({

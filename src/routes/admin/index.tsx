@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, redirect, useRouteContext, useRouter } from "@tanstack/react-router";
-import { getCurrentAdmin, logout } from "@/server/functions/auth";
-import { listInvites } from "@/server/functions/invites";
+import { getCurrentAdmin, logout } from "@/api/functions/auth";
+import { listInvites } from "@/api/functions/invites";
 import { InviteForm } from "@/components/admin/InviteForm";
 import { StatusFilter, type StatusFilterValue } from "@/components/admin/StatusFilter";
 import { InviteRow } from "@/components/admin/InviteRow";

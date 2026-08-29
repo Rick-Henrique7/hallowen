@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
-import { login } from "@/server/functions/auth";
+import { login } from "@/api/functions/auth";
 
 export const Route = createFileRoute("/admin/login")({
   beforeLoad: async () => {

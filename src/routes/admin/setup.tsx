@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { setupAdmin, login } from "@/server/functions/auth";
+import { setupAdmin, login } from "@/api/functions/auth";
 
 export const Route = createFileRoute("/admin/setup")({
   component: SetupPage,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { deleteInvite, updateInvite } from "@/server/functions/invites";
+import { deleteInvite, updateInvite } from "@/api/functions/invites";
 import {
   buildInviteUrl,
   buildMailtoUrl,

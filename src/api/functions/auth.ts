@@ -1,11 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "@/server/db/client";
-import { admin } from "@/server/db/schema";
-import { hashPassword, verifyPassword } from "@/server/auth/password";
-import { createSession, deleteSession, validateSession } from "@/server/auth/session";
-import { clearSessionCookie, getSessionCookie, setSessionCookie } from "@/server/auth/cookie";
+import { db } from "@/api/db/client";
+import { admin } from "@/api/db/schema";
+import { hashPassword, verifyPassword } from "@/api/auth/password";
+import { createSession, deleteSession, validateSession } from "@/api/auth/session";
+import { clearSessionCookie, getSessionCookie, setSessionCookie } from "@/api/auth/cookie";
 
 const credentialsSchema = z.object({
   username: z.string().min(1).max(64),

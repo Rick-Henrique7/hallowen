@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createInvite } from "@/server/functions/invites";
+import { createInvite } from "@/api/functions/invites";
 
 type InviteFormProps = {
   onCreated: () => void;

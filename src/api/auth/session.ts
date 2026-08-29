@@ -1,6 +1,6 @@
 import { eq, lt } from "drizzle-orm";
-import { db } from "@/server/db/client";
-import { sessions } from "@/server/db/schema";
+import { db } from "@/api/db/client";
+import { sessions } from "@/api/db/schema";
 import { generateSessionToken } from "@/lib/id";
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
