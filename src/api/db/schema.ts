@@ -12,12 +12,14 @@ export const admin = pgTable("admin", {
 });
 
 /**
- * Each row is one invited guest. `id` is a 6-char alphanumeric slug used in
- * the public URL (?id=...). `sent` and `confirmed` are organizer-toggled
+ * Each row is one invited guest. `id` is a server-assigned auto-increment
+ * integer (the unique identifier for the row + the public URL `?id=...`).
+ * `name` is free-form text (duplicates are allowed — the URL id is what
+ * disambiguates). `sent` and `confirmed` are organizer-toggled
  * (no backend write from the guest).
  */
 export const invites = pgTable("invites", {
-  id: text("id").primaryKey(),
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
   sent: boolean("sent").notNull().default(false),
   confirmed: boolean("confirmed").notNull().default(false),

@@ -9,7 +9,7 @@ import {
 } from "@/lib/messages";
 
 type Invite = {
-  id: string;
+  id: number;
   name: string;
   sent: boolean;
   confirmed: boolean;

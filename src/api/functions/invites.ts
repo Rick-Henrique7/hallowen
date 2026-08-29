@@ -3,20 +3,21 @@ import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/api/db/client";
 import { invites } from "@/api/db/schema";
-import { generateInviteId } from "@/lib/id";
 
 const createSchema = z.object({
   name: z.string().min(1).max(120),
 });
 
+const idSchema = z.number().int().positive();
+
 const updateSchema = z.object({
-  id: z.string().min(1).max(16),
+  id: idSchema,
   sent: z.boolean().optional(),
   confirmed: z.boolean().optional(),
 });
 
 const deleteSchema = z.object({
-  id: z.string().min(1).max(16),
+  id: idSchema,
 });
 
 export const listInvites = createServerFn({ method: "GET" }).handler(async () => {
@@ -27,8 +28,8 @@ export const listInvites = createServerFn({ method: "GET" }).handler(async () =>
 export const createInvite = createServerFn({ method: "POST" })
   .validator(createSchema)
   .handler(async ({ data }) => {
-    const id = generateInviteId();
-    const inserted = await db.insert(invites).values({ id, name: data.name.trim() }).returning();
+    // id is auto-assigned by Postgres (serial PK). Just insert the name.
+    const inserted = await db.insert(invites).values({ name: data.name.trim() }).returning();
     const row = inserted[0];
     if (!row) {
       throw new Error("Falha ao criar convite");

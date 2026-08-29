@@ -427,3 +427,16 @@ pro Neon. Tanto prod quanto preview.
 - Sem migração reversível
 - Sem refresh de sessão automática (só no próximo login)
 - Sem internacionalização
+
+## 13. Changelog de implementação
+
+- **2026-08-29 — PK de `invites` mudou de `text` (nanoid 6-char) para `serial`**
+  (auto-increment integer). Motivo: id numérico é o identificador único
+  canônico do banco; o nome é livre (duplicatas permitidas). A URL pública
+  continua `?id=N&name=...` — o `N` agora é inteiro. As 2 linhas existentes
+  foram preservadas pela migration `0001_sturdy_valkyrie.sql` (receberam
+  ids 1 e 2 da nova sequence). Antigos links com nanoid deixaram de
+  resolver. `generateInviteId()` foi removido de `src/lib/id.ts`; o
+  `nanoid` continua só para o token de sessão (32 chars).
+  Migration: `drizzle/0001_sturdy_valkyrie.sql`. Para aplicar:
+  `npm run db:migrate`.

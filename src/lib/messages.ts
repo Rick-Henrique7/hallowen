@@ -1,5 +1,5 @@
-export function buildInviteUrl(origin: string, id: string, name: string): string {
-  const params = new URLSearchParams({ id, name });
+export function buildInviteUrl(origin: string, id: number, name: string): string {
+  const params = new URLSearchParams({ id: String(id), name });
   return `${origin}/?${params.toString()}`;
 }
 

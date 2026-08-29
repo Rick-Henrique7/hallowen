@@ -11,14 +11,17 @@ const DEFAULT_DESCRIPTION =
 
 type Search = {
   name?: string;
-  id?: string;
+  id?: number;
 };
 
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>): Search => {
     const result: Search = {};
     if (typeof search["name"] === "string") result.name = search["name"];
-    if (typeof search["id"] === "string") result.id = search["id"];
+    if (typeof search["id"] === "string") {
+      const n = Number.parseInt(search["id"], 10);
+      if (Number.isFinite(n) && n > 0) result.id = n;
+    }
     return result;
   },
   head: () => ({
