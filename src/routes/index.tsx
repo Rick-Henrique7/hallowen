@@ -8,6 +8,13 @@ const DEFAULT_TITLE = "Halloween Party — Você Está Convidado";
 const DEFAULT_DESCRIPTION =
   "Abra o envelope e descubra os detalhes da nossa festa de Halloween: 31 de outubro, fantasia obrigatória. Confirme sua presença.";
 
+// How long the open carta holds at the natural position before sliding
+// out the bottom of the viewport. Tuned to feel like "shown briefly,
+// then dismissed".
+const HOLD_MS = 900;
+// Slide-out duration (kept in sync with the ease curve below).
+const SLIDE_OUT_MS = 800;
+
 type Search = {
   name?: string;
   id?: number;
@@ -38,6 +45,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const [open, setOpen] = useState(false);
+  const [sliding, setSliding] = useState(false);
   const { name } = Route.useSearch();
 
   // Personalize the document title when a name is in the URL.
@@ -46,6 +54,19 @@ function Index() {
     const base = "Halloween Party — Você Está Convidado";
     document.title = name ? `${name}, ${base}` : base;
   }, [name]);
+
+  // After the open carta settles, wait HOLD_MS then trigger the
+  // slide-out by flipping `sliding` to true. The carta animates
+  // to y: 100vh and fades out.
+  useEffect(() => {
+    if (!open || sliding) return;
+    const t = setTimeout(() => setSliding(true), HOLD_MS);
+    return () => clearTimeout(t);
+  }, [open, sliding]);
+
+  function handleClick() {
+    setOpen(true);
+  }
 
   return (
     <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-crimson px-4 py-16">
@@ -59,7 +80,7 @@ function Index() {
             <motion.button
               key="closed"
               type="button"
-              onClick={() => setOpen(true)}
+              onClick={handleClick}
               aria-label="Abrir o convite"
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -81,9 +102,12 @@ function Index() {
             <motion.div
               key="open"
               initial={{ opacity: 0, scale: 0.7, y: 60 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.25 } }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              animate={sliding ? { opacity: 0, y: "100vh" } : { opacity: 1, scale: 1, y: 0 }}
+              transition={
+                sliding
+                  ? { duration: SLIDE_OUT_MS / 1000, ease: [0.55, 0, 1, 0.45] }
+                  : { duration: 0.8, ease: [0.22, 1, 0.36, 1] }
+              }
               className="relative w-full"
             >
               <img
