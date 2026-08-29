@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { deleteInvite, updateInvite } from "@/api/functions/invites";
 import {
   buildInviteUrl,
@@ -29,8 +29,18 @@ export function InviteRow({ invite, onChanged }: InviteRowProps) {
   const [busy, setBusy] = useState<"toggle" | "delete" | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const inviteUrl = buildInviteUrl(origin, local.id, local.name);
+  // The invite URL depends on window.location.origin (only available on the
+  // client). To avoid a React hydration mismatch — where the server-rendered
+  // HTML has an empty origin in the WhatsApp/email hrefs but the client
+  // produces the real origin — we render with an empty URL during SSR + the
+  // initial client render, then populate it via useEffect after hydration.
+  // The user sees the link update immediately (same paint frame as hydration).
+  const [inviteUrl, setInviteUrl] = useState("");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setInviteUrl(buildInviteUrl(window.location.origin, local.id, local.name));
+  }, [local.id, local.name]);
+
   const whatsappText = formatWhatsApp(local.name, inviteUrl);
   const email = formatEmail(local.name, inviteUrl);
 
@@ -65,8 +75,11 @@ export function InviteRow({ invite, onChanged }: InviteRowProps) {
   }
 
   async function handleCopy() {
+    // Compute the URL on demand so the copy always uses the freshest value,
+    // even if the user clicks before the post-hydration useEffect has run.
+    const url = buildInviteUrl(window.location.origin, local.id, local.name);
     try {
-      await navigator.clipboard.writeText(inviteUrl);
+      await navigator.clipboard.writeText(url);
       setCopyState("copied");
       setTimeout(() => setCopyState("idle"), 1500);
     } catch {
@@ -92,7 +105,6 @@ export function InviteRow({ invite, onChanged }: InviteRowProps) {
       <div className="flex flex-col gap-3 p-4 sm:table-cell sm:gap-1 sm:p-3">
         <div>
           <p className="font-sans text-base text-parchment">{local.name}</p>
-          <p className="mt-0.5 font-mono text-xs text-parchment/40">/?id={local.id}</p>
         </div>
 
         {/* Toggles: wrap on narrow, side-by-side on wider */}
