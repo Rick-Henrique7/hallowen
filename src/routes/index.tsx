@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { Embers } from "@/components/invitation/Embers";
 import { SpiderOverlay } from "@/components/invitation/SpiderOverlay";
-import { WalkingSpider } from "@/components/invitation/WalkingSpider";
 
 const DEFAULT_TITLE = "Halloween Party — Você Está Convidado";
 const DEFAULT_DESCRIPTION =
@@ -94,27 +93,6 @@ function Index() {
                 className="block h-full w-full select-none bg-transparent object-cover"
                 style={{ mixBlendMode: "multiply" }}
               />
-
-              {/* Personalized greeting overlay */}
-              {name && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.6 }}
-                  className="pointer-events-none absolute inset-x-0 top-[8%] flex flex-col items-center px-6 text-center"
-                >
-                  <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-parchment/60 sm:text-xs">
-                    Para
-                  </span>
-                  <span className="mt-1 break-words font-display text-2xl text-parchment drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] sm:text-3xl md:text-4xl">
-                    {name}
-                  </span>
-                </motion.div>
-              )}
-
-              {/* Spiders walking inside the open envelope */}
-              <WalkingSpider top={56} duration={26} delay={1} size={80} />
-              <WalkingSpider top={340} duration={32} delay={7} size={64} reverse />
             </motion.div>
           )}
         </AnimatePresence>
