@@ -53,7 +53,7 @@ function Index() {
       <Embers />
       <SpiderOverlay />
 
-      <div className="relative z-30 w-full max-w-4xl">
+      <div className="relative z-30 w-full max-w-xl">
         <AnimatePresence mode="wait">
           {!open && (
             <motion.button
@@ -84,13 +84,13 @@ function Index() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.25 } }}
               transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-              className="relative isolate aspect-[3/2] w-full overflow-hidden"
+              className="relative w-full"
             >
               <img
                 src="/carta-01.svg"
                 alt="Carta de Halloween aberta"
                 draggable={false}
-                className="block h-full w-full select-none bg-transparent object-cover"
+                className="block h-auto w-full select-none bg-transparent"
                 style={{ mixBlendMode: "multiply" }}
               />
             </motion.div>
