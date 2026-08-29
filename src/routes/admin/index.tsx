@@ -69,11 +69,12 @@ function AdminPanel() {
   }
 
   return (
-    <main className="min-h-screen bg-crimson px-4 py-8 text-parchment sm:px-6 sm:py-12">
+    <main className="min-h-screen bg-crimson px-3 py-6 text-parchment sm:px-6 sm:py-12">
       <div className="mx-auto max-w-4xl">
-        <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        {/* Header: stacks on mobile, row on sm+ */}
+        <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="font-display text-3xl">Convites de Halloween</h1>
+            <h1 className="font-display text-2xl sm:text-3xl">Convites de Halloween</h1>
             <p className="mt-1 font-sans text-sm text-parchment/60">
               Logado como <strong>{current.username}</strong>
             </p>
@@ -81,33 +82,38 @@ function AdminPanel() {
           <button
             type="button"
             onClick={handleLogout}
-            className="rounded-sm border border-parchment/30 px-4 py-2 font-sans text-xs uppercase tracking-widest text-parchment/80 transition-colors hover:border-parchment hover:text-parchment"
+            className="self-start rounded-sm border border-parchment/30 px-4 py-2 font-sans text-xs uppercase tracking-widest text-parchment/80 transition-colors hover:border-parchment hover:text-parchment sm:self-auto"
           >
             Sair
           </button>
         </header>
 
-        <section className="mb-6 rounded-sm border border-crimson-deep bg-crimson-deep/40 p-5">
+        {/* New invite form: section stays the same, InviteForm is responsive internally */}
+        <section className="mb-6 rounded-sm border border-crimson-deep bg-crimson-deep/40 p-4 sm:p-5">
           <h2 className="mb-3 font-serif text-sm uppercase tracking-widest text-parchment/70">
             Novo convite
           </h2>
           <InviteForm onCreated={refresh} />
         </section>
 
-        <section className="mb-4 flex flex-wrap items-center gap-3">
+        {/* Search + filter: stacks on mobile */}
+        <section className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
           <input
             type="search"
             placeholder="Buscar por nome…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="min-w-0 flex-1 rounded-sm border border-parchment/20 bg-parchment/10 px-3 py-1.5 font-sans text-sm text-parchment placeholder:text-parchment/40 focus:border-ember focus:outline-none"
+            className="min-w-0 flex-1 rounded-sm border border-parchment/20 bg-parchment/10 px-3 py-2 font-sans text-base text-parchment placeholder:text-parchment/40 focus:border-ember focus:outline-none sm:text-sm"
           />
-          <StatusFilter value={status} onChange={setStatus} />
-          <span className="font-sans text-xs text-parchment/50">
-            {filtered.length} de {invites.length}
-          </span>
+          <div className="flex items-center gap-3">
+            <StatusFilter value={status} onChange={setStatus} />
+            <span className="font-sans text-xs text-parchment/50">
+              {filtered.length} de {invites.length}
+            </span>
+          </div>
         </section>
 
+        {/* Invites list: ul/li on mobile, table on sm+ */}
         <section className="overflow-hidden rounded-sm border border-crimson-deep bg-crimson-deep/30">
           {invites.length === 0 ? (
             <div className="p-8 text-center">
@@ -122,21 +128,11 @@ function AdminPanel() {
               </p>
             </div>
           ) : (
-            <table className="w-full table-fixed">
-              <thead>
-                <tr className="border-b border-parchment/15 bg-soot/30 text-left font-sans text-xs uppercase tracking-widest text-parchment/60">
-                  <th className="px-3 py-2">Convidado</th>
-                  <th className="w-28 px-3 py-2 text-center">Enviado</th>
-                  <th className="w-32 px-3 py-2 text-center">Confirmou</th>
-                  <th className="w-72 px-3 py-2">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((inv) => (
-                  <InviteRow key={inv.id} invite={inv} onChanged={refresh} />
-                ))}
-              </tbody>
-            </table>
+            <ul className="divide-y divide-parchment/10">
+              {filtered.map((inv) => (
+                <InviteRow key={inv.id} invite={inv} onChanged={refresh} />
+              ))}
+            </ul>
           )}
         </section>
       </div>

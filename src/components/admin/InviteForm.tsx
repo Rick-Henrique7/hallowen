@@ -27,7 +27,7 @@ export function InviteForm({ onCreated }: InviteFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-start">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row sm:items-start">
       <div className="flex-1">
         <input
           type="text"
@@ -36,7 +36,7 @@ export function InviteForm({ onCreated }: InviteFormProps) {
           onChange={(e) => setName(e.target.value)}
           maxLength={120}
           required
-          className="block w-full rounded-sm border border-parchment/20 bg-parchment/10 px-3 py-2 font-sans text-parchment placeholder:text-parchment/40 focus:border-ember focus:outline-none"
+          className="block h-11 w-full rounded-sm border border-parchment/20 bg-parchment/10 px-3 font-sans text-base text-parchment placeholder:text-parchment/40 focus:border-ember focus:outline-none sm:text-sm"
         />
         {error && (
           <p role="alert" className="mt-2 font-sans text-xs text-pumpkin-deep">
@@ -47,7 +47,7 @@ export function InviteForm({ onCreated }: InviteFormProps) {
       <button
         type="submit"
         disabled={submitting || !name.trim()}
-        className="rounded-sm bg-pumpkin px-5 py-2 font-sans text-sm font-semibold uppercase tracking-widest text-soot transition-colors hover:bg-pumpkin-deep hover:text-parchment disabled:opacity-50"
+        className="h-11 rounded-sm bg-pumpkin px-5 font-sans text-sm font-semibold uppercase tracking-widest text-soot transition-colors hover:bg-pumpkin-deep hover:text-parchment disabled:opacity-50"
       >
         {submitting ? "Gerando..." : "+ Gerar"}
       </button>

@@ -25,7 +25,7 @@ export function StatusFilter({ value, onChange }: StatusFilterProps) {
         id="status-filter"
         value={value}
         onChange={(e) => onChange(e.target.value as StatusFilterValue)}
-        className="rounded-sm border border-parchment/20 bg-parchment/10 px-3 py-1.5 font-sans text-sm text-parchment focus:border-ember focus:outline-none"
+        className="h-11 w-full rounded-sm border border-parchment/20 bg-parchment/10 px-3 font-sans text-sm text-parchment focus:border-ember focus:outline-none sm:w-auto"
       >
         {OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value} className="bg-soot">

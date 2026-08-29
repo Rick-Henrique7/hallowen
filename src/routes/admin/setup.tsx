@@ -60,7 +60,7 @@ function SetupPage() {
             required
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="mt-1 block w-full rounded-sm border border-soot bg-parchment/10 px-3 py-2 font-sans text-parchment placeholder:text-parchment/30 focus:border-ember focus:outline-none"
+            className="mt-1 block h-11 w-full rounded-sm border border-soot bg-parchment/10 px-3 font-sans text-base text-parchment placeholder:text-parchment/30 focus:border-ember focus:outline-none sm:text-sm"
           />
         </label>
 
@@ -75,7 +75,7 @@ function SetupPage() {
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-sm border border-soot bg-parchment/10 px-3 py-2 font-sans text-parchment placeholder:text-parchment/30 focus:border-ember focus:outline-none"
+            className="mt-1 block h-11 w-full rounded-sm border border-soot bg-parchment/10 px-3 font-sans text-base text-parchment placeholder:text-parchment/30 focus:border-ember focus:outline-none sm:text-sm"
           />
         </label>
 
@@ -90,7 +90,7 @@ function SetupPage() {
             minLength={8}
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="mt-1 block w-full rounded-sm border border-soot bg-parchment/10 px-3 py-2 font-sans text-parchment placeholder:text-parchment/30 focus:border-ember focus:outline-none"
+            className="mt-1 block h-11 w-full rounded-sm border border-soot bg-parchment/10 px-3 font-sans text-base text-parchment placeholder:text-parchment/30 focus:border-ember focus:outline-none sm:text-sm"
           />
         </label>
 
@@ -106,7 +106,7 @@ function SetupPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-sm bg-pumpkin px-4 py-2 font-sans text-sm font-semibold uppercase tracking-widest text-soot transition-colors hover:bg-pumpkin-deep hover:text-parchment disabled:opacity-50"
+          className="h-11 w-full rounded-sm bg-pumpkin px-4 font-sans text-sm font-semibold uppercase tracking-widest text-soot transition-colors hover:bg-pumpkin-deep hover:text-parchment disabled:opacity-50"
         >
           {submitting ? "Criando..." : "Criar e entrar"}
         </button>
