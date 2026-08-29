@@ -71,7 +71,7 @@ function Index() {
                 src="/carta-03.svg"
                 alt="Carta de Halloween fechada"
                 draggable={false}
-                className="block h-auto w-full select-none bg-transparent drop-shadow-[0_35px_60px_rgba(0,0,0,0.55)] transition-transform duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1"
+                className="block h-auto w-full select-none bg-transparent transition-transform duration-300 group-hover:scale-[1.02] group-hover:-translate-y-1"
                 style={{ mixBlendMode: "multiply" }}
               />
             </motion.button>
@@ -84,7 +84,7 @@ function Index() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.25 } }}
               transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-              className="relative isolate aspect-[3/2] w-full overflow-hidden rounded-sm shadow-[0_35px_80px_rgba(0,0,0,0.55)]"
+              className="relative isolate aspect-[3/2] w-full overflow-hidden"
             >
               <img
                 src="/carta-01.svg"
