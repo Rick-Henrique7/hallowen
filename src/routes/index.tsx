@@ -14,6 +14,12 @@ const DEFAULT_DESCRIPTION =
 const HOLD_MS = 900;
 // Slide-out duration (kept in sync with the ease curve below).
 const SLIDE_OUT_MS = 800;
+// Delay between the open carta settling and the leaf (prancheta) starting
+// to grow out of the envelope. Small overlap feels more organic.
+const PRANCHETA_DELAY_MS = 350;
+// How long the leaf takes to grow from envelope-size to ~60% of the
+// viewport. Tied to PRANCHETA_EASE below.
+const PRANCHETA_GROW_MS = 900;
 
 type Search = {
   name?: string;
@@ -115,6 +121,26 @@ function Index() {
                 alt="Carta de Halloween aberta"
                 draggable={false}
                 className="block h-auto w-full select-none bg-transparent"
+                style={{ mixBlendMode: "multiply" }}
+              />
+
+              {/* Prancheta: leaf that grows out of the envelope, from a
+                  small centered mark to ~60vw. Lives ABOVE the carta
+                  (z-10 vs carta's natural z-0 in the relative parent).
+                  Pointer events disabled so the underlying carta can't
+                  accidentally grab hover/clicks while the leaf is shown. */}
+              <motion.img
+                src="/prancheta.jpg"
+                alt="Convite de Halloween"
+                draggable={false}
+                initial={{ opacity: 0, scale: 0.04, rotate: -2 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                transition={{
+                  delay: PRANCHETA_DELAY_MS / 1000,
+                  duration: PRANCHETA_GROW_MS / 1000,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="pointer-events-none absolute left-1/2 top-1/2 z-10 w-[60vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 select-none bg-transparent object-contain"
                 style={{ mixBlendMode: "multiply" }}
               />
             </motion.div>
