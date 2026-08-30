@@ -123,29 +123,31 @@ function Index() {
                 className="block h-auto w-full select-none bg-transparent"
                 style={{ mixBlendMode: "multiply" }}
               />
-
-              {/* Prancheta: leaf that grows out of the envelope, from a
-                  small centered mark to ~60vw. Lives ABOVE the carta
-                  (z-10 vs carta's natural z-0 in the relative parent).
-                  Pointer events disabled so the underlying carta can't
-                  accidentally grab hover/clicks while the leaf is shown. */}
-              <motion.img
-                src="/prancheta.jpg"
-                alt="Convite de Halloween"
-                draggable={false}
-                initial={{ opacity: 0, scale: 0.04, rotate: -2 }}
-                animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                transition={{
-                  delay: PRANCHETA_DELAY_MS / 1000,
-                  duration: PRANCHETA_GROW_MS / 1000,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                className="pointer-events-none absolute left-1/2 top-1/2 z-10 w-[60vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 select-none bg-transparent object-contain"
-                style={{ mixBlendMode: "multiply" }}
-              />
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Prancheta: leaf that grows out of the envelope. Sibling of the
+            carta (not a child) so it does NOT inherit the carta's slide-out
+            translateY. Anchored to the same center as the carta (the parent
+            div is the envelope's bounding box). It stays on screen after
+            the carta slides away — that's the whole point of the redesign. */}
+        {open && (
+          <motion.img
+            src="/prancheta.jpg"
+            alt="Convite de Halloween"
+            draggable={false}
+            initial={{ opacity: 0, scale: 0.02, rotate: -2 }}
+            animate={{ opacity: 1, scale: 0.5, rotate: 0 }}
+            transition={{
+              delay: PRANCHETA_DELAY_MS / 1000,
+              duration: PRANCHETA_GROW_MS / 1000,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="pointer-events-none absolute left-1/2 top-[36%] z-10 w-[60vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 select-none bg-transparent object-contain"
+            style={{ mixBlendMode: "multiply" }}
+          />
+        )}
       </div>
     </main>
   );
