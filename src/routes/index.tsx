@@ -134,7 +134,7 @@ function Index() {
             the carta slides away — that's the whole point of the redesign. */}
         {open && (
           <motion.img
-            src="/prancheta.jpg"
+            src="/convite-verso.jpg"
             alt="Convite de Halloween"
             draggable={false}
             initial={{ opacity: 0, scale: 0.02, rotate: -2 }}
