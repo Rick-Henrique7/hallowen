@@ -134,49 +134,46 @@ function Index() {
       {/* Convite (verso / frente). Sibling of the envelope, full-viewport
           centered layer so it sits in the middle of the screen regardless
           of the envelope's max-w-xl width. Stays after the carta slides
-          off — the user can keep flipping it. */}
+          off — the user can keep flipping it.
+
+          We avoid CSS 3D flip cards (backface-visibility + rotateY) here
+          because they fight with Motion's transform composition during
+          the entry animation, causing the wrong face to flash in. Instead
+          we use a simple opacity cross-fade on click. It's less
+          physically realistic but rock-solid visually. */}
       {open && (
         <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
           <motion.button
             type="button"
             onClick={handleClickLeaf}
             aria-label={showFrente ? "Mostrar verso do convite" : "Mostrar frente do convite"}
-            // Outer container only owns the 3D flip rotation. Opacity,
-            // scale, and entry animation live on the inner LeafEntry so
-            // the two animations don't fight each other.
-            animate={{ rotateY: showFrente ? 180 : 0 }}
-            transition={{ duration: FLIP_MS / 1000, ease: [0.22, 1, 0.36, 1] }}
-            style={{ transformStyle: "preserve-3d" }}
-            className="pointer-events-auto w-[40vw] max-w-md cursor-pointer select-none appearance-none border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-crimson"
+            // No transform tween. We tried scale: -1 (verso upside down)
+            // and scaleX: -1 (text mirrored, illegible). The cross-fade
+            // between the two faces is enough; the JPGs themselves
+            // carry whatever orientation the designer chose.
+            className="pointer-events-auto relative w-[40vw] max-w-md cursor-pointer select-none appearance-none border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-crimson"
           >
             <LeafEntry delayMs={LEAF_DELAY_MS} growMs={LEAF_GROW_MS}>
-              {/* Verso: the inside of the card. Shows by default
-                  (container rotateY=0, this face's back is hidden). */}
-              <img
+              {/* Verso face. Cross-fades out when showFrente=true, in
+                  when false. Stacks on top of frente via z-10. */}
+              <motion.img
                 src="/convite-verso.jpg"
                 alt="Verso do convite de Halloween"
                 draggable={false}
-                className="block w-full select-none bg-transparent object-contain"
-                style={{
-                  backfaceVisibility: "hidden",
-                  WebkitBackfaceVisibility: "hidden",
-                  mixBlendMode: "multiply",
-                }}
+                animate={{ opacity: showFrente ? 0 : 1 }}
+                transition={{ duration: FLIP_MS / 1000, ease: "easeInOut" }}
+                className="absolute inset-0 z-10 block w-full select-none bg-transparent object-contain"
+                style={{ mixBlendMode: "multiply" }}
               />
-              {/* Frente: the outside. Pre-rotated 180deg so when the
-                  container is rotated 180deg, this face's total rotation
-                  is 360deg (= 0deg, front-facing) and becomes visible. */}
-              <img
+              {/* Frente face. Visible by default (showFrente=true). */}
+              <motion.img
                 src="/convite-frente.jpg"
                 alt="Frente do convite de Halloween"
                 draggable={false}
-                className="absolute inset-0 block w-full select-none bg-transparent object-contain"
-                style={{
-                  backfaceVisibility: "hidden",
-                  WebkitBackfaceVisibility: "hidden",
-                  transform: "rotateY(180deg)",
-                  mixBlendMode: "multiply",
-                }}
+                animate={{ opacity: showFrente ? 1 : 0 }}
+                transition={{ duration: FLIP_MS / 1000, ease: "easeInOut" }}
+                className="block w-full select-none bg-transparent object-contain"
+                style={{ mixBlendMode: "multiply" }}
               />
             </LeafEntry>
           </motion.button>
@@ -202,11 +199,24 @@ function LeafEntry({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.04, rotate: -2 }}
-      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+      // 3-phase entry: small + invisible (0%) -> lifts out of envelope,
+      // slightly larger and offset up (35%) -> settles to final size and
+      // position (100%). Mimics a leaf being pulled out of an envelope
+      // and then held up in front of the camera.
+      //
+      // NO rotate here: even rotateZ in a preserve-3d context can fight
+      // with the parent flip's rotateY and cause the verso back face to
+      // flash mid-entry. The static entry is enough.
+      initial={{ opacity: 0, scale: 0.55, y: 0 }}
+      animate={{
+        opacity: [0, 1, 1],
+        scale: [0.55, 0.7, 1],
+        y: [0, -40, 0],
+      }}
       transition={{
         delay: delayMs / 1000,
         duration: growMs / 1000,
+        times: [0, 0.35, 1],
         ease: [0.22, 1, 0.36, 1],
       }}
       className="relative w-full"
