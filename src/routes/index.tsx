@@ -8,18 +8,15 @@ const DEFAULT_TITLE = "Halloween Party — Você Está Convidado";
 const DEFAULT_DESCRIPTION =
   "Abra o envelope e descubra os detalhes da nossa festa de Halloween: 31 de outubro, fantasia obrigatória. Confirme sua presença.";
 
-// How long the open carta holds at the natural position before sliding
-// out the bottom of the viewport. Tuned to feel like "shown briefly,
-// then dismissed".
+// Carta aberta slide-out: how long the carta holds before sliding off,
+// and how long the slide takes.
 const HOLD_MS = 900;
-// Slide-out duration (kept in sync with the ease curve below).
 const SLIDE_OUT_MS = 800;
-// Delay between the open carta settling and the leaf (prancheta) starting
-// to grow out of the envelope. Small overlap feels more organic.
-const PRANCHETA_DELAY_MS = 350;
-// How long the leaf takes to grow from envelope-size to ~60% of the
-// viewport. Tied to PRANCHETA_EASE below.
-const PRANCHETA_GROW_MS = 900;
+// Convite (verso/frente): delay + duration of the entry grow, and
+// duration of the 3D flip on click.
+const LEAF_DELAY_MS = 350;
+const LEAF_GROW_MS = 900;
+const FLIP_MS = 650;
 
 type Search = {
   name?: string;
@@ -52,9 +49,11 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [open, setOpen] = useState(false);
   const [sliding, setSliding] = useState(false);
+  // Frente (outside) is the default face after the carta opens; click
+  // flips to verso (inside), second click flips back to frente.
+  const [showFrente, setShowFrente] = useState(true);
   const { name } = Route.useSearch();
 
-  // Personalize the document title when a name is in the URL.
   useEffect(() => {
     if (typeof document === "undefined") return;
     const base = "Halloween Party — Você Está Convidado";
@@ -62,16 +61,19 @@ function Index() {
   }, [name]);
 
   // After the open carta settles, wait HOLD_MS then trigger the
-  // slide-out by flipping `sliding` to true. The carta animates
-  // to y: 100vh and fades out.
+  // slide-out by flipping `sliding` to true.
   useEffect(() => {
     if (!open || sliding) return;
     const t = setTimeout(() => setSliding(true), HOLD_MS);
     return () => clearTimeout(t);
   }, [open, sliding]);
 
-  function handleClick() {
+  function handleClickCarta() {
     setOpen(true);
+  }
+
+  function handleClickLeaf() {
+    setShowFrente((prev) => !prev);
   }
 
   return (
@@ -80,13 +82,14 @@ function Index() {
       <Embers />
       <SpiderOverlay />
 
+      {/* Envelope (closed / open). Centered, max-w-xl. */}
       <div className="relative z-30 w-full max-w-xl">
         <AnimatePresence mode="wait">
           {!open && (
             <motion.button
               key="closed"
               type="button"
-              onClick={handleClick}
+              onClick={handleClickCarta}
               aria-label="Abrir o convite"
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -126,29 +129,90 @@ function Index() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Prancheta: leaf that grows out of the envelope. Sibling of the
-            carta (not a child) so it does NOT inherit the carta's slide-out
-            translateY. Anchored to the same center as the carta (the parent
-            div is the envelope's bounding box). It stays on screen after
-            the carta slides away — that's the whole point of the redesign. */}
-        {open && (
-          <motion.img
-            src="/convite-verso.jpg"
-            alt="Convite de Halloween"
-            draggable={false}
-            initial={{ opacity: 0, scale: 0.02, rotate: -2 }}
-            animate={{ opacity: 1, scale: 0.5, rotate: 0 }}
-            transition={{
-              delay: PRANCHETA_DELAY_MS / 1000,
-              duration: PRANCHETA_GROW_MS / 1000,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            className="pointer-events-none absolute left-1/2 top-[36%] z-10 w-[60vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 select-none bg-transparent object-contain"
-            style={{ mixBlendMode: "multiply" }}
-          />
-        )}
       </div>
+
+      {/* Convite (verso / frente). Sibling of the envelope, full-viewport
+          centered layer so it sits in the middle of the screen regardless
+          of the envelope's max-w-xl width. Stays after the carta slides
+          off — the user can keep flipping it. */}
+      {open && (
+        <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
+          <motion.button
+            type="button"
+            onClick={handleClickLeaf}
+            aria-label={showFrente ? "Mostrar verso do convite" : "Mostrar frente do convite"}
+            // Outer container only owns the 3D flip rotation. Opacity,
+            // scale, and entry animation live on the inner LeafEntry so
+            // the two animations don't fight each other.
+            animate={{ rotateY: showFrente ? 180 : 0 }}
+            transition={{ duration: FLIP_MS / 1000, ease: [0.22, 1, 0.36, 1] }}
+            style={{ transformStyle: "preserve-3d" }}
+            className="pointer-events-auto w-[40vw] max-w-md cursor-pointer select-none appearance-none border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-crimson"
+          >
+            <LeafEntry delayMs={LEAF_DELAY_MS} growMs={LEAF_GROW_MS}>
+              {/* Verso: the inside of the card. Shows by default
+                  (container rotateY=0, this face's back is hidden). */}
+              <img
+                src="/convite-verso.jpg"
+                alt="Verso do convite de Halloween"
+                draggable={false}
+                className="block w-full select-none bg-transparent object-contain"
+                style={{
+                  backfaceVisibility: "hidden",
+                  WebkitBackfaceVisibility: "hidden",
+                  mixBlendMode: "multiply",
+                }}
+              />
+              {/* Frente: the outside. Pre-rotated 180deg so when the
+                  container is rotated 180deg, this face's total rotation
+                  is 360deg (= 0deg, front-facing) and becomes visible. */}
+              <img
+                src="/convite-frente.jpg"
+                alt="Frente do convite de Halloween"
+                draggable={false}
+                className="absolute inset-0 block w-full select-none bg-transparent object-contain"
+                style={{
+                  backfaceVisibility: "hidden",
+                  WebkitBackfaceVisibility: "hidden",
+                  transform: "rotateY(180deg)",
+                  mixBlendMode: "multiply",
+                }}
+              />
+            </LeafEntry>
+          </motion.button>
+        </div>
+      )}
     </main>
+  );
+}
+
+/**
+ * Owns the "grow from a tiny centered mark to full size" entry
+ * animation. The flip is on the parent so they don't fight each
+ * other for the same transform property.
+ */
+function LeafEntry({
+  delayMs,
+  growMs,
+  children,
+}: {
+  delayMs: number;
+  growMs: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.04, rotate: -2 }}
+      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+      transition={{
+        delay: delayMs / 1000,
+        duration: growMs / 1000,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      className="relative w-full"
+      style={{ transformStyle: "preserve-3d" }}
+    >
+      {children}
+    </motion.div>
   );
 }
