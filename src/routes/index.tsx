@@ -163,7 +163,7 @@ function Index() {
             // orientation when shown.
             animate={{ scaleX: [1, -1, 1] }}
             transition={{ duration: FLIP_MS / 1000, ease: "easeInOut" }}
-            className="pointer-events-auto relative w-[40vw] max-w-md cursor-pointer select-none appearance-none border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-crimson"
+            className="pointer-events-auto relative w-[85vw] max-w-[420px] cursor-pointer select-none appearance-none border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-crimson sm:w-[40vw] sm:max-w-md"
           >
             {/* Guest name from the URL ?name=... param. Renders ONLY on
                 the frente face — the verso has its own layout and doesn't
