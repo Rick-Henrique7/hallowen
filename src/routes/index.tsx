@@ -165,13 +165,34 @@ function Index() {
             transition={{ duration: FLIP_MS / 1000, ease: "easeInOut" }}
             className="pointer-events-auto relative w-[40vw] max-w-md cursor-pointer select-none appearance-none border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-crimson"
           >
-            {/* Guest name rendered above the convite (the URL ?name=... param
-                from the admin link). Sits on top of both faces via z-20
-                so it's readable on either the frente or the verso. */}
-            {name && (
-              <div className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2 font-display text-lg uppercase tracking-widest text-parchment drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)] sm:top-4 sm:text-xl">
+            {/* Guest name from the URL ?name=... param. Renders ONLY on
+                the frente face — the verso has its own layout and doesn't
+                have the "VOCÊ É NOSSO CONVIDADO (A)" line under it.
+
+                Position: dead center of the convite (top-1/2 + translate),
+                right where the designer's "VOCÊ É NOSSO CONVIDADO (A)"
+                caption sits in convite-frente.jpg. Sized large so it
+                reads as the actual personalized invitation line, not a
+                floating label. z-20 keeps it above the frente image's
+                stacking context.
+
+                Fade-in matches the LeafEntry entry so the name appears
+                in lockstep with the card settling, not before it (which
+                looked like it was "flashing then vanishing"). */}
+            {showFrente && name && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  delay: (LEAF_DELAY_MS + LEAF_GROW_MS) / 1000,
+                  duration: 0.5,
+                  ease: "easeOut",
+                }}
+                className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 text-center font-display text-3xl uppercase tracking-[0.2em] text-parchment sm:text-4xl"
+                style={{ textShadow: "0 2px 6px rgba(0,0,0,0.85)" }}
+              >
                 {name}
-              </div>
+              </motion.div>
             )}
 
             {/* Lottie click hint anchored to the bottom-right corner of
