@@ -1,8 +1,16 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
+import clickAnimationData from "../../scripts/animation/click.json";
 import { Embers } from "@/components/invitation/Embers";
 import { SpiderOverlay } from "@/components/invitation/SpiderOverlay";
+
+// lottie-react bundles ~250KB of lottie-web under the hood, and we only
+// need it AFTER the guest clicks the closed carta. Lazy-loading keeps
+// that weight out of the initial JS payload so Motion (and the carta
+// fade-in / spider animations) can hydrate within ~1s on the dev
+// server instead of waiting 10s+ for the full bundle to parse.
+const Lottie = lazy(() => import("lottie-react").then((m) => ({ default: m.Lottie })));
 
 const DEFAULT_TITLE = "Halloween Party — Você Está Convidado";
 const DEFAULT_DESCRIPTION =
@@ -147,12 +155,40 @@ function Index() {
             type="button"
             onClick={handleClickLeaf}
             aria-label={showFrente ? "Mostrar verso do convite" : "Mostrar frente do convite"}
-            // No transform tween. We tried scale: -1 (verso upside down)
-            // and scaleX: -1 (text mirrored, illegible). The cross-fade
-            // between the two faces is enough; the JPGs themselves
-            // carry whatever orientation the designer chose.
+            // 2D "flip" illusion via scaleX keyframes: 1 -> -1 -> 1.
+            // The face swap (opacity cross-fade) happens AT the same
+            // time, so the viewer only ever sees the verso mirrored
+            // briefly mid-flip, never at rest. The end state is back
+            // to scaleX: 1, so the verso JPG renders with its natural
+            // orientation when shown.
+            animate={{ scaleX: [1, -1, 1] }}
+            transition={{ duration: FLIP_MS / 1000, ease: "easeInOut" }}
             className="pointer-events-auto relative w-[40vw] max-w-md cursor-pointer select-none appearance-none border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-2 focus-visible:ring-offset-crimson"
           >
+            {/* Guest name rendered above the convite (the URL ?name=... param
+                from the admin link). Sits on top of both faces via z-20
+                so it's readable on either the frente or the verso. */}
+            {name && (
+              <div className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2 font-display text-lg uppercase tracking-widest text-parchment drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)] sm:top-4 sm:text-xl">
+                {name}
+              </div>
+            )}
+
+            {/* Lottie click hint anchored to the bottom-right corner of
+                the convite itself (not the viewport). z-30 so it floats
+                above the JPG faces. pointer-events-none so the convite
+                click handler still fires when the user taps near it.
+                Wrapped in Suspense because the Lottie component itself
+                is lazy-loaded (it pulls in ~250KB of lottie-web). */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute bottom-2 right-2 z-30 w-16 sm:bottom-3 sm:right-3 sm:w-20"
+            >
+              <Suspense fallback={null}>
+                <Lottie src={clickAnimationData} loop autoplay />
+              </Suspense>
+            </div>
+
             <LeafEntry delayMs={LEAF_DELAY_MS} growMs={LEAF_GROW_MS}>
               {/* Verso face. Cross-fades out when showFrente=true, in
                   when false. Stacks on top of frente via z-10. */}
