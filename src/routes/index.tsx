@@ -188,7 +188,7 @@ function Index() {
                   duration: 0.5,
                   ease: "easeOut",
                 }}
-                className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 text-center font-display text-3xl uppercase tracking-[0.2em] text-parchment sm:text-4xl"
+                className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 text-center font-display text-3xl uppercase tracking-[0.2em] text-pumpkin sm:text-4xl"
                 style={{ textShadow: "0 2px 6px rgba(0,0,0,0.85)" }}
               >
                 {name}
