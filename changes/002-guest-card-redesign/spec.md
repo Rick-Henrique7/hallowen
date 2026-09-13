@@ -15,15 +15,16 @@
 
 ### 1.2 Sequência de animação ao clicar (5 passos, total ~2s)
 
-| Passo | Duração | O que acontece | Easing |
-|---|---|---|---|
-| 1 | 0.0–0.2s | Aba do envelope **abre** (rotateX 180° na aba de cima) | ease-out |
-| 2 | 0.2–1.0s | **Carta sobe de dentro** do envelope + envelope **desce** até sumir pelo rodapé. As 2 animações em paralelo | carta: ease-out, envelope: ease-in |
-| 3 | 0.8–1.4s | Carta **se expande** de 100% da largura do envelope pra ~75% do viewport | ease-in-out |
-| 4 | 1.2–1.7s | Título "HALLOWEEN PARTY" entra com **efeito neon** (pisca 4-5× em laranja, estabiliza) | n/a (animação interna do título) |
-| 5 | 1.6–2.0s | Conteúdo da carta aparece (Para [nome], QR placeholder) | fade-in ease-out |
+| Passo | Duração  | O que acontece                                                                                              | Easing                             |
+| ----- | -------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| 1     | 0.0–0.2s | Aba do envelope **abre** (rotateX 180° na aba de cima)                                                      | ease-out                           |
+| 2     | 0.2–1.0s | **Carta sobe de dentro** do envelope + envelope **desce** até sumir pelo rodapé. As 2 animações em paralelo | carta: ease-out, envelope: ease-in |
+| 3     | 0.8–1.4s | Carta **se expande** de 100% da largura do envelope pra ~75% do viewport                                    | ease-in-out                        |
+| 4     | 1.2–1.7s | Título "HALLOWEEN PARTY" entra com **efeito neon** (pisca 4-5× em laranja, estabiliza)                      | n/a (animação interna do título)   |
+| 5     | 1.6–2.0s | Conteúdo da carta aparece (Para [nome], QR placeholder)                                                     | fade-in ease-out                   |
 
 **Estado final**: tela mostra a carta expandida, com:
+
 - Botão "Fechar" no canto superior direito
 - Título "HALLOWEEN PARTY" estabilizado em laranja neon
 - "Para [nome]" se `?name=Maria` na URL
@@ -32,6 +33,7 @@
 ### 1.3 Animação reversa (botão "Fechar")
 
 Sequência inversa:
+
 - Título some (fade-out)
 - Carta encolhe (75% → 100% da largura do envelope original)
 - Envelope **sobe** de volta do rodapé
@@ -47,9 +49,9 @@ Reload da página também reseta pro estado inicial.
 
 ```ts
 type CartaConviteProps = {
-  src: string;           // caminho do PNG (ex: "/carta.png")
-  name?: string;         // nome do convidado (de ?name=X)
-  onClose: () => void;   // callback do botão Fechar
+  src: string; // caminho do PNG (ex: "/carta.png")
+  name?: string; // nome do convidado (de ?name=X)
+  onClose: () => void; // callback do botão Fechar
 };
 ```
 
@@ -136,21 +138,21 @@ o loader, que faz roundtrip HTTP. Em DB lento = delay visível.
 ```ts
 function InviteRow({ invite, onChanged }) {
   const [optimisticInvite, setOptimisticInvite] = useState(invite);
-  
+
   async function handleToggle(field) {
     const previous = optimisticInvite;
     const next = { ...optimisticInvite, [field]: !optimisticInvite[field] };
-    setOptimisticInvite(next);  // update local IMEDIATAMENTE
-    
+    setOptimisticInvite(next); // update local IMEDIATAMENTE
+
     try {
       await updateInvite({ data: { id: next.id, [field]: next[field] } });
-      onChanged();  // refetch loader em background
+      onChanged(); // refetch loader em background
     } catch (err) {
-      setOptimisticInvite(previous);  // reverter se falhar
+      setOptimisticInvite(previous); // reverter se falhar
       // mostrar erro
     }
   }
-  
+
   // usar `optimisticInvite` em vez de `invite` no render
 }
 ```
@@ -172,9 +174,17 @@ function InviteRow({ invite, onChanged }) {
 **Breakpoints**: usar `sm:` (640px) e `md:` (768px) do Tailwind.
 
 **Tabela atual (problema)**:
+
 ```tsx
 <table className="w-full table-fixed">
-  <thead><tr><th>Convidado</th><th>Enviado</th><th>Confirmou</th><th>Ações</th></tr></thead>
+  <thead>
+    <tr>
+      <th>Convidado</th>
+      <th>Enviado</th>
+      <th>Confirmou</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
   ...
 </table>
 ```
@@ -215,11 +225,14 @@ function InviteRow({ invite, onChanged }) {
 ```
 
 **Header do admin** responsivo:
+
 ```tsx
 <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
   <div>
     <h1>Convites de Halloween</h1>
-    <p>Logado como <strong>{user}</strong></p>
+    <p>
+      Logado como <strong>{user}</strong>
+    </p>
   </div>
   <button className="self-start sm:self-auto">Sair</button>
 </header>
@@ -248,8 +261,7 @@ lado em desktop:
 - [ ] **T-2.5**: Adicionar botões Voltar/Fechar com animação reversa
 - [ ] **T-2.6**: Remover as 2 instâncias de `<WalkingSpider />` (você
       marcou como "ruins")
-- [ ] **T-2.7**: Refatorar `InviteRow.tsx` com optimistic update
-      + reversão em erro
+- [ ] **T-2.7**: Refatorar `InviteRow.tsx` com optimistic update + reversão em erro
 - [ ] **T-2.8**: Refatorar `routes/admin/index.tsx` pra layout
       mobile-first (cards em vez de tabela)
 - [ ] **T-2.9**: Ajustar tamanhos de toque (min-h-44, min-w-44) em
@@ -270,7 +282,80 @@ lado em desktop:
 - i18n
 - Schema versionado / migrations reversíveis
 
-## 7. Critérios de aceite
+## 7. Restrição de proporção (invariante visual) — **NÃO QUEBRAR**
+
+**Regra**: qualquer modificação nos assets visuais da carta — seja na
+**frente** (`convite-frente.jpg`), no **verso** (`convite-verso.jpg`),
+no **envelope/carta fechada** (`carta-fechada.svg`), ou na **carta
+aberta** (`carta-aberta.svg`) — **deve preservar a proporção atual
+(width/height) do asset**.
+
+**Por que essa restrição existe**:
+
+A proporção atual não é arbitrária. Ela foi calibrada em conjunto com
+os containers responsivos do `src/routes/index.tsx` pra que:
+
+1. **Em mobile (≤ 640px)** — a carta caiba inteira na viewport vertical
+   sem invadir a área do `SpiderOverlay`/`Embers`, e o nome
+   centralizado (`top-1/2 -translate-y-1/2`) coincida com a linha
+   "VOCÊ É NOSSO CONVIDADO (A)" do JPG.
+2. **Em desktop (≥ 640px)** — a carta ocupe o espaço visual esperado
+   (`max-w-md` ≈ 448px no convite, `max-w-xl` ≈ 576px na carta SVG)
+   com altura calculada pelo `aspect-ratio` natural do asset.
+
+Se o asset for trocado por um de proporção diferente (ex: designer
+manda um JPG mais quadrado, ou recorta uma faixa horizontal), os
+problemas aparecem simultaneamente nos dois breakpoints:
+
+| Breakpoint | Sintoma                                                                                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Mobile     | Carta invade a área do overlay ou fica com altura que empurra elementos pra fora da viewport; o nome "Henri" no centro deixa de coincidir com a linha do JPG |
+| Desktop    | Carta fica com altura excessiva, centralização visual quebra, ou sobram espaços vazios grandes                                                               |
+
+**Proporções atuais (referência canônica)**:
+
+| Asset                | Dimensões reais (px) | Aspect ratio (W/H) | Orientação |
+| -------------------- | -------------------- | ------------------ | ---------- |
+| `convite-frente.jpg` | 613 × 860            | **0.713**          | retrato    |
+| `convite-verso.jpg`  | 613 × 860            | **0.713**          | retrato    |
+| `carta-fechada.svg`  | 779 × 515 (render)   | **1.513**          | paisagem   |
+| `carta-aberta.svg`   | 779 × 515 (render)   | **1.513**          | paisagem   |
+
+**Verificação obrigatória antes de qualquer troca de asset** — em
+PowerShell:
+
+```powershell
+Add-Type -AssemblyName System.Drawing
+$img = [System.Drawing.Image]::FromFile((Resolve-Path 'public\novo-asset.jpg').Path)
+$ratio = [Math]::Round($img.Width / $img.Height, 3)
+Write-Output "ratio=$ratio (esperado 0.713 para convite, 1.513 para carta)"
+$img.Dispose()
+```
+
+Para SVGs, ler os atributos `width` e `height` do elemento raiz
+(viewBox pode ser quadrado, mas o que define a proporção visual é
+`width`/`height`):
+
+```powershell
+$svg = Get-Content 'public\carta-nova.svg' -Raw
+$w = [regex]::Match($svg, 'width="([\d.]+)"').Groups[1].Value
+$h = [regex]::Match($svg, 'height="([\d.]+)"').Groups[1].Value
+Write-Output "ratio=$([Math]::Round([double]$w / [double]$h, 3))"
+```
+
+**Tolerância**: ±0.01 (margem pra variação de sub-pixel).
+
+**Não aceitável** (a menos que containers + posição do nome sejam
+refatorados em conjunto, com nova proposta na `proposal.md`):
+
+- Trocar por asset quadrado (1:1)
+- Recortar mantendo só uma faixa horizontal
+- Redimensionar sem preservar `aspect-ratio` (o browser vai distorcer
+  se a `<img>` tiver `width` + `height` fixos em vez de `w-full h-auto`)
+- Mudar `width`/`height` no SVG sem ajustar o `viewBox` na mesma
+  proporção
+
+## 8. Critérios de aceite
 
 - [ ] Click no envelope fechado inicia os 5 passos
 - [ ] Envelope some e carta expande pra 75% da largura
@@ -282,3 +367,4 @@ lado em desktop:
 - [ ] Toggle "Enviado" / "Confirmou" responde visualmente < 200ms
 - [ ] Sem regressão no fluxo /admin/setup + /admin/login
 - [ ] Lint + typecheck limpos
+- [ ] **Proporção dos assets da carta preservada** (ver § 7) — tolerância ±0.01
