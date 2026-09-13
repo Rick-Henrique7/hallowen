@@ -1,7 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
-import clickAnimationData from "../../scripts/animation/click.json";
 import { Embers } from "@/components/invitation/Embers";
 import { SpiderOverlay } from "@/components/invitation/SpiderOverlay";
 
@@ -206,7 +205,7 @@ function Index() {
               className="pointer-events-none absolute bottom-2 right-2 z-30 w-16 sm:bottom-3 sm:right-3 sm:w-20"
             >
               <Suspense fallback={null}>
-                <Lottie src={clickAnimationData} loop autoplay />
+                <Lottie src="/click.json" loop autoplay />
               </Suspense>
             </div>
 
