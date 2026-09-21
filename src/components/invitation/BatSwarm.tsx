@@ -16,11 +16,39 @@ type BatConfig = {
 };
 
 const SWARM: BatConfig[] = [
+  // Wave 1 — the original five (lead the formation)
   { startX: 18, amplitude: 80, period: 1.6, delay: 0.0, mirror: false, duration: 2.4, scale: 0.6 },
   { startX: 42, amplitude: 110, period: 1.9, delay: 0.15, mirror: true, duration: 2.6, scale: 0.8 },
   { startX: 65, amplitude: 70, period: 1.4, delay: 0.3, mirror: false, duration: 2.2, scale: 0.55 },
   { startX: 82, amplitude: 95, period: 1.7, delay: 0.05, mirror: true, duration: 2.5, scale: 0.7 },
   { startX: 30, amplitude: 60, period: 2.0, delay: 0.4, mirror: false, duration: 2.7, scale: 0.5 },
+  // Wave 2 — fill in the gaps left by wave 1
+  { startX: 8, amplitude: 55, period: 1.5, delay: 0.55, mirror: false, duration: 2.3, scale: 0.45 },
+  { startX: 25, amplitude: 90, period: 1.8, delay: 0.6, mirror: true, duration: 2.5, scale: 0.65 },
+  { startX: 50, amplitude: 75, period: 1.6, delay: 0.5, mirror: false, duration: 2.4, scale: 0.55 },
+  { startX: 58, amplitude: 105, period: 2.1, delay: 0.7, mirror: true, duration: 2.8, scale: 0.75 },
+  { startX: 75, amplitude: 65, period: 1.5, delay: 0.45, mirror: false, duration: 2.3, scale: 0.5 },
+  { startX: 92, amplitude: 85, period: 1.9, delay: 0.65, mirror: true, duration: 2.6, scale: 0.6 },
+  // Wave 3 — stragglers, smaller and slower (tail of the swarm)
+  { startX: 12, amplitude: 50, period: 1.4, delay: 0.9, mirror: false, duration: 2.9, scale: 0.4 },
+  { startX: 35, amplitude: 70, period: 1.7, delay: 1.0, mirror: true, duration: 3.0, scale: 0.45 },
+  { startX: 48, amplitude: 55, period: 1.5, delay: 0.85, mirror: false, duration: 2.7, scale: 0.4 },
+  { startX: 70, amplitude: 80, period: 2.0, delay: 1.1, mirror: true, duration: 3.1, scale: 0.5 },
+  {
+    startX: 88,
+    amplitude: 60,
+    period: 1.6,
+    delay: 0.95,
+    mirror: false,
+    duration: 2.8,
+    scale: 0.42,
+  },
+  // Wave 4 — late strays from the edges (catch the eye after the main burst)
+  { startX: 5, amplitude: 40, period: 1.3, delay: 1.3, mirror: false, duration: 3.2, scale: 0.38 },
+  { startX: 22, amplitude: 55, period: 1.5, delay: 1.4, mirror: true, duration: 3.3, scale: 0.4 },
+  { startX: 55, amplitude: 65, period: 1.8, delay: 1.5, mirror: false, duration: 3.4, scale: 0.45 },
+  { startX: 78, amplitude: 50, period: 1.4, delay: 1.25, mirror: true, duration: 3.0, scale: 0.38 },
+  { startX: 95, amplitude: 45, period: 1.3, delay: 1.35, mirror: false, duration: 3.1, scale: 0.4 },
 ];
 
 type BatSwarmProps = {
@@ -29,18 +57,23 @@ type BatSwarmProps = {
 };
 
 /**
- * Five bats flying upward in a sinusoidal arc when `active` flips true.
- * Used as the entry flourish on the landing page — runs once when the
- * guest opens the closed carta, alongside the som-morcego.mp3 SFX.
+ * Twenty bats flying upward in a sinusoidal arc when `active` flips
+ * true. Used as the entry flourish on the landing page — runs once
+ * when the guest opens the closed carta, alongside the som-morcego.mp3
+ * SFX.
+ *
+ * The flock is split into four staggered waves (5+6+5+4) so the burst
+ * doesn't arrive all at once — front bats lead, stragglers trail for
+ * ~1.5s. Each bat has its own delay / period / amplitude so the
+ * formation never looks like a row of identical arcs.
  *
  * Each bat:
  *   - starts at the bottom of the viewport (100vh) at a randomised X
- *   - follows a sinusoidal X curve with its own amplitude/period so the
- *     formation never looks like a row of identical arcs
- *   - rotates to follow the tangent of the curve (a real bat banks as
- *     it turns) plus a small wobble matching the wing flap
+ *   - follows a sinusoidal X curve with its own amplitude/period
+ *   - rotates to follow the tangent of the curve (a real bat banks
+ *     as it turns) plus a small wobble matching the wing flap
  *   - scales up as it gets closer to the camera (perspective)
- *   - fades in fast (50ms) and out at the top (last 20%)
+ *   - fades in fast and out at the top (last 20%)
  *
  * Motion owns the path, the Lottie player owns the wing flap (independent
  * loops inside the JSON). Lazy-loaded via Suspense so the ~12KB JSON
