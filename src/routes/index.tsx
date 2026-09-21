@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { Embers } from "@/components/invitation/Embers";
 import { SpiderOverlay } from "@/components/invitation/SpiderOverlay";
+import { BatSwarm } from "@/components/invitation/BatSwarm";
 
 // lottie-react bundles ~250KB of lottie-web under the hood, and we only
 // need it AFTER the guest clicks the closed carta. Lazy-loading keeps
@@ -107,6 +108,7 @@ function Index() {
       <div className="pointer-events-none absolute inset-0 spooky-vignette" aria-hidden="true" />
       <Embers />
       <SpiderOverlay />
+      <BatSwarm active={open} />
 
       {/* Envelope (closed / open). Centered, max-w-xl. */}
       <div className="relative z-30 w-full max-w-xl">
