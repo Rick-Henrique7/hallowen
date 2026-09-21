@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { Embers } from "@/components/invitation/Embers";
@@ -75,7 +75,26 @@ function Index() {
     return () => clearTimeout(t);
   }, [open, sliding]);
 
+  // Preload + play the bat SFX on first user gesture (the click that
+  // opens the carta). Most browsers block autoplay until the user has
+  // interacted with the page, so wiring it to handleClickCarta is
+  // the reliable way to unlock the AudioContext. We construct one
+  // Audio element per session and reuse it — no need to recreate on
+  // every flip. Volume is dialed back to 0.55 because the source is
+  // louder than comfortable at full gain.
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   function handleClickCarta() {
+    if (typeof window !== "undefined" && !audioRef.current) {
+      const a = new Audio("/som-morcego.mp3");
+      a.preload = "auto";
+      a.volume = 0.55;
+      audioRef.current = a;
+    }
+    audioRef.current?.play().catch(() => {
+      // Autoplay rejected (e.g. user hasn't gestured yet — shouldn't
+      // happen here, but swallow the error so the click flow doesn't
+      // break). Playback will be retried on the next interaction.
+    });
     setOpen(true);
   }
 
