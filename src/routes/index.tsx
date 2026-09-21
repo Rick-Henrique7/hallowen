@@ -76,42 +76,94 @@ function Index() {
     return () => clearTimeout(t);
   }, [open, sliding]);
 
-  // Preload + play the bat SFX on first user gesture (the click that
-  // opens the carta). Most browsers block autoplay until the user has
-  // interacted with the page, so wiring it to handleClickCarta is
-  // the reliable way to unlock the AudioContext. We construct one
-  // Audio element per session and reuse it — no need to recreate on
-  // every flip. Volume is dialed back to 0.55 because the source is
-  // louder than comfortable at full gain.
+  // Audio plan — two tracks, one goal: the ambient Halloween BGM
+  // should be playing as soon as a human enters the site, and the
+  // one-shot bat SFX should fire on the carta open.
   //
-  // The background soundtrack (background-sound-hallowen.mp3, loop)
-  // is also started here, at 0.6 volume. Both unlock together off
-  // the same gesture.
+  // Browsers gate AudioContext on user interaction, so we can't just
+  // autoplay on mount. The strategy:
+  //   1. Construct both <Audio> elements eagerly on mount and call
+  //      .play() — the BGM call will silently fail on the gesture
+  //      rejection (that's fine, we'll retry below).
+  //   2. Attach a one-shot global listener for ANY first user
+  //      gesture (click anywhere, keypress, mousemove > 5px, scroll,
+  //      touchstart). On the first one, attempt .play() on the BGM
+  //      again. Once it succeeds, the listener removes itself.
+  //   3. The carta's onClick handler fires the SFX + retries BGM if
+  //      it somehow hasn't started yet.
+  //
+  // Result: the music kicks in the moment the user does ANYTHING
+  // (hovering the page is enough), well before they click the carta.
   const sfxRef = useRef<HTMLAudioElement | null>(null);
   const bgmRef = useRef<HTMLAudioElement | null>(null);
+  const bgmStartedRef = useRef(false);
+
+  // Build the audio elements once on mount. We can't play() yet
+  // (no user gesture), but we can preload so the first interaction
+  // gets instant playback instead of a cold-decode stall.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sfx = new Audio("/som-morcego.mp3");
+    sfx.preload = "auto";
+    sfx.volume = 0.55;
+    sfxRef.current = sfx;
+
+    const bgm = new Audio("/background-sound-hallowen.mp3");
+    bgm.loop = true;
+    bgm.volume = 0.6;
+    bgm.preload = "auto";
+    bgmRef.current = bgm;
+
+    // Best-effort: try to start the BGM immediately. On most browsers
+    // this promise will reject with NotAllowedError — we swallow it,
+    // because the gesture-listener below will retry on the first
+    // user interaction.
+    bgm.play()?.catch(() => {});
+
+    // Watch for the first user gesture anywhere on the page. We use
+    // multiple event types because some guests will move the mouse
+    // before they click, and we want the music to start the moment
+    // they do anything intentional.
+    const tryStartBgm = () => {
+      if (bgmStartedRef.current) return;
+      bgm
+        .play()
+        ?.then(() => {
+          bgmStartedRef.current = true;
+        })
+        .catch(() => {
+          // Still blocked. Will retry on the next gesture.
+        });
+    };
+    const events: (keyof WindowEventMap)[] = ["pointerdown", "keydown", "touchstart", "scroll"];
+    const handler = () => {
+      tryStartBgm();
+      // Once audio successfully starts, remove the listeners so
+      // we don't churn through try/catch on every interaction.
+      if (bgmStartedRef.current) {
+        for (const ev of events) window.removeEventListener(ev, handler);
+      }
+    };
+    for (const ev of events) window.addEventListener(ev, handler, { passive: true });
+
+    return () => {
+      for (const ev of events) window.removeEventListener(ev, handler);
+    };
+  }, []);
+
   function handleClickCarta() {
-    if (typeof window !== "undefined") {
-      if (!sfxRef.current) {
-        const a = new Audio("/som-morcego.mp3");
-        a.preload = "auto";
-        a.volume = 0.55;
-        sfxRef.current = a;
-      }
-      if (!bgmRef.current) {
-        const bg = new Audio("/background-sound-hallowen.mp3");
-        bg.loop = true;
-        bg.volume = 0.6;
-        bg.preload = "auto";
-        bgmRef.current = bg;
-      }
+    // Even if the global gesture listener already started the BGM,
+    // retry here — covers the case where the carta is the very first
+    // interaction (no prior pointerdown/keydown).
+    if (!bgmStartedRef.current && bgmRef.current) {
+      bgmRef.current
+        .play()
+        ?.then(() => {
+          bgmStartedRef.current = true;
+        })
+        .catch(() => {});
     }
-    sfxRef.current?.play().catch(() => {
-      // Autoplay rejected (shouldn't happen — click is the gesture)
-    });
-    // BGM has to .catch() too for the same reason. If the first
-    // .play() rejects (mobile Safari et al.), it stays silent for
-    // the rest of the session — better than spamming errors.
-    bgmRef.current?.play().catch(() => {});
+    sfxRef.current?.play()?.catch(() => {});
     setOpen(true);
   }
 
