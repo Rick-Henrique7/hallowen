@@ -83,19 +83,35 @@ function Index() {
   // Audio element per session and reuse it — no need to recreate on
   // every flip. Volume is dialed back to 0.55 because the source is
   // louder than comfortable at full gain.
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  //
+  // The background soundtrack (background-sound-hallowen.mp3, loop)
+  // is also started here, at 0.6 volume. Both unlock together off
+  // the same gesture.
+  const sfxRef = useRef<HTMLAudioElement | null>(null);
+  const bgmRef = useRef<HTMLAudioElement | null>(null);
   function handleClickCarta() {
-    if (typeof window !== "undefined" && !audioRef.current) {
-      const a = new Audio("/som-morcego.mp3");
-      a.preload = "auto";
-      a.volume = 0.55;
-      audioRef.current = a;
+    if (typeof window !== "undefined") {
+      if (!sfxRef.current) {
+        const a = new Audio("/som-morcego.mp3");
+        a.preload = "auto";
+        a.volume = 0.55;
+        sfxRef.current = a;
+      }
+      if (!bgmRef.current) {
+        const bg = new Audio("/background-sound-hallowen.mp3");
+        bg.loop = true;
+        bg.volume = 0.6;
+        bg.preload = "auto";
+        bgmRef.current = bg;
+      }
     }
-    audioRef.current?.play().catch(() => {
-      // Autoplay rejected (e.g. user hasn't gestured yet — shouldn't
-      // happen here, but swallow the error so the click flow doesn't
-      // break). Playback will be retried on the next interaction.
+    sfxRef.current?.play().catch(() => {
+      // Autoplay rejected (shouldn't happen — click is the gesture)
     });
+    // BGM has to .catch() too for the same reason. If the first
+    // .play() rejects (mobile Safari et al.), it stays silent for
+    // the rest of the session — better than spamming errors.
+    bgmRef.current?.play().catch(() => {});
     setOpen(true);
   }
 
