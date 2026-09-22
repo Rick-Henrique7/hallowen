@@ -4,36 +4,52 @@ import { motion, useReducedMotion } from "motion/react";
 const Lottie = lazy(() => import("lottie-react").then((m) => ({ default: m.Lottie })));
 
 type PumpkinConfig = {
-  // Where the pumpkin sits. Both are pinned to the screen edges
-  // (left < 15vw, right > 85vw) so they never occlude the central
-  // carta / convite column.
-  x: number; // percent of viewport width
-  y: number; // px from the top of the viewport
-  // Width / height of the wrapping <div> in pixels. The JSON is
-  // authored at 2160x2160, so we render at scale that reads as
-  // a sizeable prop on screen.
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  amplitude: number;
+  period: number;
   size: number;
-  // Direction the pumpkin faces. "left" = startX-style facing left.
-  // We mirror via scaleX(-1) so both pumpkins face toward the
-  // carta in the middle of the screen.
   face: "left" | "right";
+  delay: number;
+  duration: number;
 };
 
-// Two pumpkins parked at the bottom corners of the viewport. They
-// are decorative props — they do NOT move, do NOT fly, do NOT animate
-// in or out. They just sit there once the carta is open, like little
-// Halloween decorations.
+// Two pumpkins on crossing diagonal arcs. Both paths bow toward
+// the screen centre so they look like they're circling the carta
+// without ever crossing it.
 //
-// Path rationale — pinned to the screen edges so they never occlude
-// the carta / convite which live in the central column:
-//   Pumpkin A: 8vw from the left, near the bottom
-//   Pumpkin B: 92vw from the right (mirrored horizontally), near the
-//              bottom
-// Carta occupies roughly 28-72vw of the viewport horizontally, so
-// the pumpkins (8vw / 92vw anchors) are well clear of the carta.
+// Path A: bottom-left -> top-right, curve bows upward
+// Path B: top-right -> bottom-left, curve bows downward
+//
+// Both avoid the central carta column (28-72vw) by either staying
+// below 28vw or above 72vw in their start/end anchors.
 const PUMPKINS: PumpkinConfig[] = [
-  { x: 8, y: 0, size: 180, face: "right" },
-  { x: 92, y: 0, size: 180, face: "left" },
+  {
+    startX: 6,
+    startY: 88,
+    endX: 24,
+    endY: 12,
+    amplitude: 80,
+    period: 1.7,
+    size: 180,
+    face: "right",
+    delay: 0,
+    duration: 7,
+  },
+  {
+    startX: 94,
+    startY: 12,
+    endX: 76,
+    endY: 88,
+    amplitude: 90,
+    period: 1.9,
+    size: 180,
+    face: "left",
+    delay: 2.5,
+    duration: 7.5,
+  },
 ];
 
 type FlyingPumpkinsProps = {
@@ -41,35 +57,29 @@ type FlyingPumpkinsProps = {
 };
 
 /**
- * Two cute pumpkins sitting statically at the bottom of the
- * viewport. Triggered by the same `active` flag as the bat swarm —
- * once the user clicks the closed carta, both pumpkins appear and
- * stay put.
+ * Two cute pumpkins flying slowly across the viewport along
+ * crossing diagonal arcs. Triggered by the user clicking the
+ * closed carta.
  *
- * This is a decorative-only pass: no path animation, no oscillation,
- * no entry/exit transitions. They render when active flips true and
- * unmount when it flips false (which happens when the user navigates
- * away — in practice, never, since this is the landing page).
+ * Per request: flying (not static), slow (~7s per pumpkin), curved
+ * (sinusoidal lateral swing overlaid on the linear travel),
+ * appearing from different directions (here: bottom-left and
+ * top-right, so they cross paths in the middle).
  *
- * The 180px size is ~10× the previous 18-px scale; per the user's
- * request "pode aumentar o tamanho dela em 10 vezes". The Lottie
- * wrapper is sized in pixels (not vw) so the pumpkins have a
- * consistent visual size across mobile and desktop, anchored at
- * the bottom corners.
+ * Two-layer transform structure:
+ *   Outer <motion.div> = primary travel (x: lerp vw, y: lerp vh)
+ *   Inner <motion.div> = sinusoidal swing (x: sin px, y: cos px)
  *
- * Lazy-load via Suspense — same pattern as BatSwarm — keeps the
- * 17KB pumpkin JSON and the lottie-web bundle off the initial
- * route payload.
+ * Splitting them avoids Motion fighting itself over the same
+ * transform property. The wing-flap animation is independent
+ * (owned by the Lottie player).
  */
 export function FlyingPumpkins({ active }: FlyingPumpkinsProps) {
   if (!active) return null;
   if (useReducedMotion()) return null;
 
   return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex items-end justify-between px-4"
-    >
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-30 overflow-hidden">
       {PUMPKINS.map((cfg, i) => (
         <SinglePumpkin key={i} cfg={cfg} />
       ))}
@@ -78,27 +88,89 @@ export function FlyingPumpkins({ active }: FlyingPumpkinsProps) {
 }
 
 function SinglePumpkin({ cfg }: { cfg: PumpkinConfig }) {
-  // Animate opacity from 0 to 1 on mount so they don't pop in
-  // instantly. Subtle (300ms) so it feels like they were always
-  // there and just "lit up" when the carta opened.
+  const samples = 16;
+
+  // Primary path: linear lerp from start to end on both axes.
+  // `times` is shared across all keyframe arrays so Motion
+  // animates them in sync.
+  const times = Array.from({ length: samples }, (_, k) => k / (samples - 1));
+  const xKeyframes = times.map((t) => cfg.startX + (cfg.endX - cfg.startX) * t);
+  const yKeyframes = times.map((t) => cfg.startY + (cfg.endY - cfg.startY) * t);
+
+  // Secondary sine swing overlaid in a child transform track.
+  // Sin is the lateral S-curve, multiplied by a sine taper so the
+  // pumpkin enters and exits at zero swing (no jerk).
+  const lateralX = times.map((t) => {
+    const sin = Math.sin(t * Math.PI * cfg.period * 2);
+    const taper = Math.sin(t * Math.PI);
+    return Math.round(sin * taper * cfg.amplitude);
+  });
+  const lateralY = times.map((t) => {
+    const cos = Math.cos(t * Math.PI * cfg.period * 2);
+    const taper = Math.sin(t * Math.PI);
+    return Math.round(cos * taper * cfg.amplitude * 0.5);
+  });
+
+  // Bank into the curve.
+  const rKeyframes = times.map((t) => {
+    const cos = Math.cos(t * Math.PI * cfg.period * 2);
+    const taper = Math.sin(t * Math.PI);
+    return Math.round(cos * 12 * taper * (cfg.face === "left" ? -1 : 1));
+  });
+
+  const oKeyframes = [0, 1, 1, 0];
+  const oTimes = [0, 0.05, 0.85, 1];
+
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="absolute"
       style={{
-        // size is the rendered <div> footprint. The Lottie inside
-        // fills it. Mirror at the wrapper level so the wing-flap
-        // animation still feels natural when the pumpkin faces
-        // toward the centre.
+        left: 0,
+        top: 0,
         width: cfg.size,
         height: cfg.size,
-        transform: cfg.face === "left" ? "scaleX(-1)" : undefined,
+      }}
+      initial={{
+        opacity: 0,
+        x: `${xKeyframes[0]}vw`,
+        y: `${yKeyframes[0]}vh`,
+      }}
+      animate={{
+        opacity: oKeyframes,
+        x: xKeyframes.map((v) => `${v}vw`),
+        y: yKeyframes.map((v) => `${v}vh`),
+        rotate: rKeyframes,
+      }}
+      transition={{
+        duration: cfg.duration,
+        delay: cfg.delay,
+        ease: "linear",
+        times,
+        x: { duration: cfg.duration, delay: cfg.delay, ease: "easeInOut" },
+        y: { duration: cfg.duration, delay: cfg.delay, ease: "easeInOut" },
       }}
     >
-      <Suspense fallback={null}>
-        <Lottie src="/Cute Halloween flying pumpkin.json" loop autoplay />
-      </Suspense>
+      <motion.div
+        style={{
+          width: cfg.size,
+          height: cfg.size,
+          transform: cfg.face === "left" ? "scaleX(-1)" : undefined,
+        }}
+        animate={{
+          x: lateralX,
+          y: lateralY,
+        }}
+        transition={{
+          duration: cfg.duration,
+          delay: cfg.delay,
+          ease: "linear",
+          times,
+        }}
+      >
+        <Suspense fallback={null}>
+          <Lottie src="/Cute Halloween flying pumpkin.json" loop autoplay />
+        </Suspense>
+      </motion.div>
     </motion.div>
   );
 }
