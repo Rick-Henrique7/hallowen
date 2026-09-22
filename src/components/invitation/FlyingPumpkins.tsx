@@ -4,6 +4,11 @@ import { motion, useReducedMotion } from "motion/react";
 const Lottie = lazy(() => import("lottie-react").then((m) => ({ default: m.Lottie })));
 
 type PumpkinConfig = {
+  // Travel axis — the pumpkin enters and exits OFF-SCREEN, so the
+  // continuous loop never produces a visible teleport.
+  //
+  // startX/startY = where the pumpkin appears (off-screen)
+  // endX/endY = where it disappears (off-screen, opposite side)
   startX: number;
   startY: number;
   endX: number;
@@ -16,39 +21,42 @@ type PumpkinConfig = {
   duration: number;
 };
 
-// Two pumpkins on crossing diagonal arcs. Both paths bow toward
-// the screen centre so they look like they're circling the carta
-// without ever crossing it.
+// Pumpkin A: travels from bottom-left (off-screen) to upper-right
+// (off-screen). The path crosses the bottom-left third of the
+// viewport before exiting through the top edge.
 //
-// Path A: bottom-left -> top-right, curve bows upward
-// Path B: top-right -> bottom-left, curve bows downward
+// Pumpkin B: travels from top-right (off-screen) to lower-left
+// (off-screen). Crosses the upper-right third before exiting
+// through the bottom edge.
 //
-// Both avoid the central carta column (28-72vw) by either staying
-// below 28vw or above 72vw in their start/end anchors.
+// Both anchor positions are off-screen (negative or >100) so the
+// continuous loop never produces a visible teleport: the pumpkin
+// appears outside, crosses the viewport, and disappears outside.
+// Each one repeats every `duration` seconds forever.
 const PUMPKINS: PumpkinConfig[] = [
   {
-    startX: 6,
-    startY: 88,
-    endX: 24,
-    endY: 12,
+    startX: -8,
+    startY: 105,
+    endX: 50,
+    endY: -15,
     amplitude: 80,
     period: 1.7,
     size: 180,
     face: "right",
     delay: 0,
-    duration: 7,
+    duration: 8,
   },
   {
-    startX: 94,
-    startY: 12,
-    endX: 76,
-    endY: 88,
+    startX: 108,
+    startY: -5,
+    endX: 50,
+    endY: 115,
     amplitude: 90,
     period: 1.9,
     size: 180,
     face: "left",
-    delay: 2.5,
-    duration: 7.5,
+    delay: 4,
+    duration: 8.5,
   },
 ];
 
@@ -57,22 +65,28 @@ type FlyingPumpkinsProps = {
 };
 
 /**
- * Two cute pumpkins flying slowly across the viewport along
- * crossing diagonal arcs. Triggered by the user clicking the
- * closed carta.
+ * Two cute pumpkins flying slowly along diagonal arcs, looping
+ * forever while `active` is true.
  *
- * Per request: flying (not static), slow (~7s per pumpkin), curved
- * (sinusoidal lateral swing overlaid on the linear travel),
- * appearing from different directions (here: bottom-left and
- * top-right, so they cross paths in the middle).
+ * Implementation: each pumpkin's outer <motion.div> uses
+ * `repeat: Infinity` on the timeline. The keyframes walk
+ * startX/startY -> endX/endY over `duration` seconds, then
+ * instantly loop back. Because both endpoints are off-screen
+ * (negative or >100 on the relevant axis), the loop's reset is
+ * invisible to the viewer — the pumpkin appears to enter from
+ * off-screen, cross the viewport, and exit on the other side,
+ * with another one entering right behind it.
  *
- * Two-layer transform structure:
- *   Outer <motion.div> = primary travel (x: lerp vw, y: lerp vh)
- *   Inner <motion.div> = sinusoidal swing (x: sin px, y: cos px)
- *
- * Splitting them avoids Motion fighting itself over the same
- * transform property. The wing-flap animation is independent
- * (owned by the Lottie player).
+ * Design notes:
+ *   - Slow (~8s per flight), per request
+ *   - Sinusoidal lateral swing overlaid on the linear travel via
+ *     a child <motion.div> (separate transform tracks so Motion
+ *     doesn't fight itself)
+ *   - Wings flap independently inside the Lottie player
+ *   - paths avoid the carta/convite column in the centre:
+ *     Pumpkin A crosses the bottom-left third; Pumpkin B crosses
+ *     the upper-right third. They never overlap each other or
+ *     the central column at the same time.
  */
 export function FlyingPumpkins({ active }: FlyingPumpkinsProps) {
   if (!active) return null;
@@ -89,17 +103,11 @@ export function FlyingPumpkins({ active }: FlyingPumpkinsProps) {
 
 function SinglePumpkin({ cfg }: { cfg: PumpkinConfig }) {
   const samples = 16;
-
-  // Primary path: linear lerp from start to end on both axes.
-  // `times` is shared across all keyframe arrays so Motion
-  // animates them in sync.
   const times = Array.from({ length: samples }, (_, k) => k / (samples - 1));
+
   const xKeyframes = times.map((t) => cfg.startX + (cfg.endX - cfg.startX) * t);
   const yKeyframes = times.map((t) => cfg.startY + (cfg.endY - cfg.startY) * t);
 
-  // Secondary sine swing overlaid in a child transform track.
-  // Sin is the lateral S-curve, multiplied by a sine taper so the
-  // pumpkin enters and exits at zero swing (no jerk).
   const lateralX = times.map((t) => {
     const sin = Math.sin(t * Math.PI * cfg.period * 2);
     const taper = Math.sin(t * Math.PI);
@@ -111,15 +119,11 @@ function SinglePumpkin({ cfg }: { cfg: PumpkinConfig }) {
     return Math.round(cos * taper * cfg.amplitude * 0.5);
   });
 
-  // Bank into the curve.
-  const rKeyframes = times.map((t) => {
+  const rKeyframes: number[] = times.map((t) => {
     const cos = Math.cos(t * Math.PI * cfg.period * 2);
     const taper = Math.sin(t * Math.PI);
     return Math.round(cos * 12 * taper * (cfg.face === "left" ? -1 : 1));
   });
-
-  const oKeyframes = [0, 1, 1, 0];
-  const oTimes = [0, 0.05, 0.85, 1];
 
   return (
     <motion.div
@@ -130,13 +134,7 @@ function SinglePumpkin({ cfg }: { cfg: PumpkinConfig }) {
         width: cfg.size,
         height: cfg.size,
       }}
-      initial={{
-        opacity: 0,
-        x: `${xKeyframes[0]}vw`,
-        y: `${yKeyframes[0]}vh`,
-      }}
       animate={{
-        opacity: oKeyframes,
         x: xKeyframes.map((v) => `${v}vw`),
         y: yKeyframes.map((v) => `${v}vh`),
         rotate: rKeyframes,
@@ -146,8 +144,8 @@ function SinglePumpkin({ cfg }: { cfg: PumpkinConfig }) {
         delay: cfg.delay,
         ease: "linear",
         times,
-        x: { duration: cfg.duration, delay: cfg.delay, ease: "easeInOut" },
-        y: { duration: cfg.duration, delay: cfg.delay, ease: "easeInOut" },
+        repeat: Infinity,
+        repeatType: "loop",
       }}
     >
       <motion.div
@@ -165,6 +163,8 @@ function SinglePumpkin({ cfg }: { cfg: PumpkinConfig }) {
           delay: cfg.delay,
           ease: "linear",
           times,
+          repeat: Infinity,
+          repeatType: "loop",
         }}
       >
         <Suspense fallback={null}>
