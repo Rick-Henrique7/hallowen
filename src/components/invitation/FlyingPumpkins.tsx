@@ -4,42 +4,36 @@ import { motion, useReducedMotion } from "motion/react";
 const Lottie = lazy(() => import("lottie-react").then((m) => ({ default: m.Lottie })));
 
 type PumpkinConfig = {
-  startX: number; // percent of viewport width
-  endX: number; // percent of viewport width at the top
-  amplitude: number; // px, lateral swing
-  period: number; // s, sine period
-  delay: number; // s before takeoff
-  duration: number; // s, total flight
-  scale: number; // size multiplier
-  rotateAmount: number; // degrees of gentle bank
+  // Where the pumpkin sits. Both are pinned to the screen edges
+  // (left < 15vw, right > 85vw) so they never occlude the central
+  // carta / convite column.
+  x: number; // percent of viewport width
+  y: number; // px from the top of the viewport
+  // Width / height of the wrapping <div> in pixels. The JSON is
+  // authored at 2160x2160, so we render at scale that reads as
+  // a sizeable prop on screen.
+  size: number;
+  // Direction the pumpkin faces. "left" = startX-style facing left.
+  // We mirror via scaleX(-1) so both pumpkins face toward the
+  // carta in the middle of the screen.
+  face: "left" | "right";
 };
 
-// Two pumpkins, deliberately routed outside the centre column where
-// the carta/convite lives. Pumpkin A launches bottom-left and rises
-// to upper-left; Pumpkin B mirrors from bottom-right to upper-right.
-// Their lateral X swing never crosses x=50% so they never occlude the
-// carta or the convite.
+// Two pumpkins parked at the bottom corners of the viewport. They
+// are decorative props — they do NOT move, do NOT fly, do NOT animate
+// in or out. They just sit there once the carta is open, like little
+// Halloween decorations.
+//
+// Path rationale — pinned to the screen edges so they never occlude
+// the carta / convite which live in the central column:
+//   Pumpkin A: 8vw from the left, near the bottom
+//   Pumpkin B: 92vw from the right (mirrored horizontally), near the
+//              bottom
+// Carta occupies roughly 28-72vw of the viewport horizontally, so
+// the pumpkins (8vw / 92vw anchors) are well clear of the carta.
 const PUMPKINS: PumpkinConfig[] = [
-  {
-    startX: 6,
-    endX: 14,
-    amplitude: 70,
-    period: 1.6,
-    delay: 0.4,
-    duration: 2.6,
-    scale: 0.18,
-    rotateAmount: 18,
-  },
-  {
-    startX: 94,
-    endX: 86,
-    amplitude: 70,
-    period: 1.6,
-    delay: 0.6,
-    duration: 2.6,
-    scale: 0.18,
-    rotateAmount: 18,
-  },
+  { x: 8, y: 0, size: 180, face: "right" },
+  { x: 92, y: 0, size: 180, face: "left" },
 ];
 
 type FlyingPumpkinsProps = {
@@ -47,28 +41,35 @@ type FlyingPumpkinsProps = {
 };
 
 /**
- * Two cute pumpkins flying upward off the bottom corners of the
+ * Two cute pumpkins sitting statically at the bottom of the
  * viewport. Triggered by the same `active` flag as the bat swarm —
- * the user clicks the closed carta, and on click both effects
- * launch together.
+ * once the user clicks the closed carta, both pumpkins appear and
+ * stay put.
  *
- * They follow the same Motion-driven sinusoidal arc pattern as the
- * bats (started, endX drift, gentle rotation banking into the turn)
- * but the paths are intentionally pinned to the screen edges
- * (startX + endX either both < 15% or both > 85%), so neither
- * pumpkin ever crosses the central column where the carta and the
- * convite sit.
+ * This is a decorative-only pass: no path animation, no oscillation,
+ * no entry/exit transitions. They render when active flips true and
+ * unmount when it flips false (which happens when the user navigates
+ * away — in practice, never, since this is the landing page).
  *
- * Like the bats this component is decorative and lazy-loads
- * lottie-react + the JSON together, keeping them off the initial
- * bundle.
+ * The 180px size is ~10× the previous 18-px scale; per the user's
+ * request "pode aumentar o tamanho dela em 10 vezes". The Lottie
+ * wrapper is sized in pixels (not vw) so the pumpkins have a
+ * consistent visual size across mobile and desktop, anchored at
+ * the bottom corners.
+ *
+ * Lazy-load via Suspense — same pattern as BatSwarm — keeps the
+ * 17KB pumpkin JSON and the lottie-web bundle off the initial
+ * route payload.
  */
 export function FlyingPumpkins({ active }: FlyingPumpkinsProps) {
   if (!active) return null;
   if (useReducedMotion()) return null;
 
   return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-30 overflow-hidden">
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex items-end justify-between px-4"
+    >
       {PUMPKINS.map((cfg, i) => (
         <SinglePumpkin key={i} cfg={cfg} />
       ))}
@@ -77,61 +78,22 @@ export function FlyingPumpkins({ active }: FlyingPumpkinsProps) {
 }
 
 function SinglePumpkin({ cfg }: { cfg: PumpkinConfig }) {
-  const samples = 8;
-
-  // X: lerp from startX at bottom to endX at top, with a sine
-  // oscillation overlaid (each pumpkin has its own period so they
-  // don't curve in lockstep).
-  const xKeyframes = Array.from({ length: samples }, (_, k) => {
-    const t = k / (samples - 1);
-    const linear = cfg.startX + (cfg.endX - cfg.startX) * t;
-    const sin = Math.sin(t * Math.PI * (cfg.period * 2));
-    const fade = 1 - t;
-    return Math.round((linear + sin * cfg.amplitude * fade * 0.05) * 10) / 10;
-  });
-
-  // Rotation banks gently in the direction of the turn. Negative
-  // because pumpkin B is on the right and banks the other way.
-  const rKeyframes = Array.from({ length: samples }, (_, k) => {
-    const t = k / (samples - 1);
-    return -Math.sin(t * Math.PI * cfg.period) * cfg.rotateAmount;
-  });
-
-  // Scale: small to slightly larger (perspective — looks like the
-  // pumpkin climbs toward camera).
-  const sKeyframes = Array.from({ length: samples }, (_, k) => {
-    const t = k / (samples - 1);
-    return cfg.scale * (0.85 + t * 0.3);
-  });
-
-  const oKeyframes = [0, 1, 1, 0];
-  const oTimes = [0, 0.08, 0.8, 1];
-
-  // The asset is 2160x2160; we scale the rendered box down so a
-  // scale:0.18 reads as a small floating pumpkin.
+  // Animate opacity from 0 to 1 on mount so they don't pop in
+  // instantly. Subtle (300ms) so it feels like they were always
+  // there and just "lit up" when the carta opened.
   return (
     <motion.div
-      className="absolute"
-      style={{ left: 0, top: 0, width: 200, height: 200 }}
-      initial={{ opacity: 0, x: `${cfg.startX}vw`, y: "100vh" }}
-      animate={{
-        opacity: oKeyframes,
-        x: xKeyframes.map((v) => `${v}vw`),
-        y: ["100vh", "-30vh"],
-        rotate: rKeyframes,
-        scale: sKeyframes,
-      }}
-      transition={{
-        duration: cfg.duration,
-        delay: cfg.delay,
-        ease: "easeOut",
-        times: oTimes,
-        x: { duration: cfg.duration, delay: cfg.delay, ease: "easeInOut" },
-        rotate: {
-          duration: cfg.duration,
-          delay: cfg.delay,
-          ease: "easeInOut",
-        },
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      style={{
+        // size is the rendered <div> footprint. The Lottie inside
+        // fills it. Mirror at the wrapper level so the wing-flap
+        // animation still feels natural when the pumpkin faces
+        // toward the centre.
+        width: cfg.size,
+        height: cfg.size,
+        transform: cfg.face === "left" ? "scaleX(-1)" : undefined,
       }}
     >
       <Suspense fallback={null}>
